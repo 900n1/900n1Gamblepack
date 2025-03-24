@@ -1,0 +1,14 @@
+{
+	"id": "900N1GAMBLE",
+	"name": "900n1 Gamblepack",
+	"author": ["900n1"],
+	"display_name": "900n1's Creation",
+	"description": "900n1's way of having fun in Balatro, materialized for your devilish use!",
+	"prefix": "ninehund",
+	"main_file": "900n1Gamblepack.lua",
+	"priority": 2,
+	"badge_colour": "333333",
+	"badge_text_colour": "ffffff",
+	"version": "0.0.1",
+	"dependencies": ["Talisman (>=2.0.0-beta8)", "Steamodded (>=1.0.0~BETA-0301a)"],
+}
