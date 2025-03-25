@@ -32,3 +32,31 @@ if self.ability.effect == "Extra Bonus Card" then
 end
 '''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "engine/animatedsprite.lua"
+pattern = "function AnimatedSprite:init(X, Y, W, H, new_sprite_atlas, sprite_pos)"
+position = "at"
+payload = "function AnimatedSprite:init(X, Y, W, H, new_sprite_atlas, sprite_pos, cus)"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "engine/animatedsprite.lua"
+pattern = '''
+    table.insert(G.ANIMATIONS, self)
+    if getmetatable(self) == AnimatedSprite then 
+        table.insert(G.I.SPRITE, self)
+    end
+'''
+position = "at"
+payload = '''
+if not cus then
+    table.insert(G.ANIMATIONS, self)
+    if getmetatable(self) == AnimatedSprite then 
+        table.insert(G.I.SPRITE, self)
+    end
+end
+'''
+match_indent = true

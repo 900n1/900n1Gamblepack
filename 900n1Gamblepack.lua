@@ -123,11 +123,34 @@ function Card:set_sprites(_center, _front)
 	end
 end
 
+function removepopup()
+    -- copied from G.FUNCS.overlay_menu just to remove the pop-in anim
+    if G.OVERLAY_MENU then G.OVERLAY_MENU:remove() end
+    G.CONTROLLER.locks.frame_set = true
+    G.CONTROLLER.locks.frame = true
+    G.CONTROLLER.cursor_down.target = nil
+    G.CONTROLLER:mod_cursor_context_layer(G.NO_MOD_CURSOR_STACK and 0 or 1)
+    G.OVERLAY_MENU = UIBox{
+        definition = {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
+            {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR}, nodes={
+                {n=G.UIT.O, config={object = G.nine_image}},
+            }},
+        }},
+        config = {
+            align = "cm",
+            offset = {x = 0, y = 0},
+            major = G.ROOM_ATTACH,
+            bond = 'Strong',
+        }
+    }
+end
+
 -- ripped from https://github.com/Mysthaps/LobotomyCorp
 function display_image(pos, atlas, px, py, duration)
     G.nine_image_show = true
     G.nine_image_timer = 0
     G.nine_image_runtime = duration
+    G.nine_image_anim = false
     G.nine_image_trans = 1
     G.nine_image = Sprite(0, 0, 14.2*(px/py), 14.2, G.ASSET_ATLAS[atlas], pos)
     G.nine_image.states.drag.can = false
@@ -152,32 +175,58 @@ function display_image(pos, atlas, px, py, duration)
         self:draw_boundingrect()
         if self.shader_tab then love.graphics.setShader() end
     end
+    removepopup()
+end
 
-    -- copied from G.FUNCS.overlay_menu just to remove the pop-in anim
-    if G.OVERLAY_MENU then G.OVERLAY_MENU:remove() end
-    G.CONTROLLER.locks.frame_set = true
-    G.CONTROLLER.locks.frame = true
-    G.CONTROLLER.cursor_down.target = nil
-    G.CONTROLLER:mod_cursor_context_layer(G.NO_MOD_CURSOR_STACK and 0 or 1)
-    G.OVERLAY_MENU = UIBox{
-        definition = {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
-            {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR}, nodes={
-                {n=G.UIT.O, config={object = G.nine_image}},
-            }},
-        }},
-        config = {
-            align = "cm",
-            offset = {x = 0, y = 0},
-            major = G.ROOM_ATTACH,
-            bond = 'Strong',
-        }
-    }
+function display_anim(pos, atlas, size, duration, loop)
+    G.nine_image_show = true
+    G.nine_image_timer = 0
+    G.nine_image_runtime = duration
+    G.nine_image_anim = true
+    G.nine_image_trans = 1
+    G.nine_image = AnimatedSprite(0, 0, size.x, size.y, G.ANIMATION_ATLAS[atlas], {0,0}, true)
+    G.nine_image.offset_seconds = G.TIMERS.REAL
+    G.nine_image.loop = loop
+    G.nine_image.states.drag.can = false
+    G.nine_image.draw_self = function(self, overlay)
+        if not self.states.visible then return end
+        prep_draw(self, 1)
+        love.graphics.scale(1/(self.scale.x/self.VT.w), 1/(self.scale.y/self.VT.h))
+        love.graphics.setColor({1, 1, 1, G.nine_image_trans})
+        love.graphics.draw(
+            self.atlas.image,
+            self.sprite,
+            pos.x, pos.y,
+            0,
+            self.VT.w/(self.T.w),
+            self.VT.h/(self.T.h)
+        )
+        love.graphics.pop()
+    end
+    removepopup()
+end
+
+function AnimatedSprite:custom_animate(fps)
+    if self.current_animation.current ~= (self.current_animation.frames - 1) or self.loop then
+        local new_frame = math.floor(fps*(G.TIMERS.REAL - self.offset_seconds))%self.current_animation.frames
+        if new_frame ~= self.current_animation.current then
+            self.current_animation.current = new_frame
+            self.frame_offset = math.floor(self.animation.w*(self.current_animation.current))
+            self.sprite:setViewport( 
+                self.frame_offset,
+                self.animation.h*self.animation.y,
+                self.animation.w,
+                self.animation.h)
+        end
+    end
 end
 
 local game_updateref = Game.update
 function Game.update(self, dt)
-    -- Update cutscene transparency
     if G.nine_image_show then
+        if G.nine_image_anim == true then
+            G.nine_image:custom_animate(20)
+        end
         G.nine_image_timer = G.nine_image_timer + dt
         if G.nine_image_timer >= G.nine_image_runtime then 
             G.nine_image_trans = (G.nine_image_runtime + 1) - G.nine_image_timer
@@ -186,13 +235,16 @@ function Game.update(self, dt)
             G.nine_image_trans = 0
             G.nine_image_show = false
             G.SETTINGS.paused = false
-            G.nine_image:remove()
             if G.OVERLAY_MENU then G.OVERLAY_MENU:remove() end
         end
     end
 
     if G.GAME.blind and G.GAME.blind.no_debuff then 
         G.GAME.blind.disabled = nil 
+    end
+    if G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.remaining_hits <= 1 then
+        G.ROOM.jiggle = 2
+        ease_background_colour({new_colour = hsvToRgb(G.TIMERS.REAL*0.4,1,0.8,1), special_colour = hsvToRgb(G.TIMERS.REAL*0.5,1,1,1), contrast = 2})
     end
     game_updateref(self, dt)
 end
@@ -341,7 +393,14 @@ function Card:damage_card(dmg)
         self:juice_up(-0.5,-0.5);
         self.ability.health = self.ability.health - dmg;
         if self.ability.health <= 0 then
-            self:start_dissolve(nil, true);
+            G.E_MANAGER:add_event(Event({
+                trigger = "after",
+                delay = 0.2,
+                func = function()
+                    self:start_dissolve(nil, true);
+                    return true
+                end
+            })) 
         end
         SMODS.calculate_effect({ message = "-" ..dmg, colour = G.C.MULT, instant = true}, self)
     else
@@ -442,6 +501,14 @@ SMODS.Atlas({
     path = "asrielBlind.png", 
     px = 34, py = 34, 
     frames = 21 
+})
+
+SMODS.Atlas({ 
+    key = "att_light", 
+    atlas_table = "ANIMATION_ATLAS", 
+    path = "att_light.png", 
+    px = 296, py = 203, 
+    frames = 17
 })
 
 SMODS.Rarity {
@@ -1473,6 +1540,7 @@ SMODS.Voucher{
 
 local asriel_attacks = {
     function()
+        display_anim({x=40,y=-40}, "ninehund_att_light", {x=13,y=9}, 0.5)
         for i=1, #G.hand.cards do
             if i % 2 == 0 then
                 G.E_MANAGER:add_event(Event({
@@ -1489,6 +1557,7 @@ local asriel_attacks = {
         end
     end,
     function()
+        display_anim({x=0,y=-40}, "ninehund_att_light", {x=-13,y=9}, 0.5)
         for i=#G.hand.cards, 1, -1 do
             if i % 2 == 0 then
                 G.E_MANAGER:add_event(Event({
