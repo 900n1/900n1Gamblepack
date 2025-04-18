@@ -1780,8 +1780,8 @@ SMODS.Enhancement{
 		name = 'Card Sandwich',
 		text = {
 			'{C:attention}Contains playing cards{}',
-            'Unpacks held playing cards into playing',
-            'hand when played',
+            'Unpacks held playing cards',
+            'into playing hand when played',
             'Repacks cards back into the',
             'sandwich after each hand',
 		}
