@@ -10,5 +10,5 @@
 	"badge_colour": "333333",
 	"badge_text_colour": "ffffff",
 	"version": "0.0.1",
-	"dependencies": ["Talisman (>=2.0.0-beta8)", "Steamodded (>=1.0.0~BETA-0301a)"],
+	"dependencies": ["Talisman (>=2.2.0~dev)", "Steamodded (>=1.0.0~BETA-0301a)"]
 }

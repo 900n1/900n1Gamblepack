@@ -89,10 +89,10 @@ function align_layer(card, layer) --from Balatro discord, Numbuh214
     end
 end
 
-local set_spritesref = Card.set_sprites --ripped from Cryptid code, modified to work with a newer ver of steamodded
+local set_spritesref = Card.set_sprites --based from Cryptid code
 function Card:set_sprites(_center, _front)
-	set_spritesref(self, _center, _front)
-	if _center and _center.soul_pos and _center.soul_pos.extra then
+    set_spritesref(self, _center, _front)
+	if _center and _center.soul_pos and _center.soul_pos.extra9 then
         self.children.center = Sprite(
 			self.T.x,
 			self.T.y,
@@ -109,17 +109,17 @@ function Card:set_sprites(_center, _front)
 			G.ASSET_ATLAS[_center.atlas or _center.set],
 			_center.soul_pos
 		)
-        self.children.front = Sprite(
+        self.children.float2 = Sprite(
 			self.T.x,
 			self.T.y,
 			self.T.w,
 			self.T.h,
 			G.ASSET_ATLAS[_center.atlas or _center.set],
-			_center.soul_pos.extra
+			_center.soul_pos.extra9
 		)
 		align_layer(self,"center")
         align_layer(self,"floating_sprite")
-        align_layer(self,"front")
+        align_layer(self,"float2")
 	end
 end
 
@@ -145,14 +145,14 @@ function removepopup()
     }
 end
 
--- ripped from https://github.com/Mysthaps/LobotomyCorp
-function display_image(pos, atlas, px, py, duration)
+-- ripped from https://github.com/Mysthaps/LobotomyCorp (with permission...., hi myst lol), modified to be used as a function for image display
+function display_image(pos, atlas, cframe, duration)
     G.nine_image_show = true
     G.nine_image_timer = 0
     G.nine_image_runtime = duration
     G.nine_image_anim = false
     G.nine_image_trans = 1
-    G.nine_image = Sprite(0, 0, 14.2*(px/py), 14.2, G.ASSET_ATLAS[atlas], pos)
+    G.nine_image = Sprite(0, 0, cframe.sx, cframe.sy, G.ASSET_ATLAS[atlas], pos)
     G.nine_image.states.drag.can = false
     G.nine_image.draw_self = function(self, overlay)
         if not self.states.visible then return end
@@ -165,7 +165,7 @@ function display_image(pos, atlas, px, py, duration)
         love.graphics.draw(
             self.atlas.image,
             self.sprite,
-            0, 0,
+            cframe.x, cframe.y,
             0,
             self.VT.w/(self.T.w),
             self.VT.h/(self.T.h)
@@ -239,10 +239,10 @@ function Game.update(self, dt)
         end
     end
 
-    if G.GAME.blind and G.GAME.blind.no_debuff then 
+    if G.GAME.blind and G.GAME.blind.config.blind.no_debuff then 
         G.GAME.blind.disabled = nil 
     end
-    if G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.remaining_hits <= 1 then
+    if G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.ending == true then
         G.ROOM.jiggle = 2
         ease_background_colour({new_colour = hsvToRgb(G.TIMERS.REAL*0.4,1,0.8,1), special_colour = hsvToRgb(G.TIMERS.REAL*0.5,1,1,1), contrast = 2})
     end
@@ -390,19 +390,39 @@ end
 
 function Card:damage_card(dmg)
     if self.ability.health ~= nil and self.ability.max_health ~= nil then
-        self:juice_up(-0.5,-0.5);
-        self.ability.health = self.ability.health - dmg;
-        if self.ability.health <= 0 then
-            G.E_MANAGER:add_event(Event({
-                trigger = "after",
-                delay = 0.2,
-                func = function()
-                    self:start_dissolve(nil, true);
-                    return true
+        if dmg ~= 0 then
+            if dmg > 0 then
+                SMODS.calculate_context({card_damaged = self});
+            end
+            self:juice_up(-1,-1);
+            if self.config.center_key == 'm_glass' then
+                self.ability.health = self.ability.health - (dmg*3);
+                if self.ability.health <= 0 then
+                    G.E_MANAGER:add_event(Event({
+                        trigger = "after",
+                        delay = 0.2,
+                        func = function()
+                            self:shatter();
+                            return true
+                        end
+                    })) 
                 end
-            })) 
+                SMODS.calculate_effect({ message = "-" ..(dmg*3).." !", colour = G.C.MULT, instant = true}, self)
+            else
+                self.ability.health = self.ability.health - dmg;
+                if self.ability.health <= 0 then
+                    G.E_MANAGER:add_event(Event({
+                        trigger = "after",
+                        delay = 0.2,
+                        func = function()
+                            self:start_dissolve(nil, true);
+                            return true
+                        end
+                    })) 
+                end
+                SMODS.calculate_effect({ message = "-" ..dmg, colour = G.C.MULT, instant = true}, self)
+            end
         end
-        SMODS.calculate_effect({ message = "-" ..dmg, colour = G.C.MULT, instant = true}, self)
     else
         self.ability.max_health = self.base.nominal;
         self.ability.health = self.ability.max_health;
@@ -410,7 +430,97 @@ function Card:damage_card(dmg)
     end
 end
 
+function generate_ui_cardarea_thing(cards) --ripped from UI_definitions
+    local cardarea = CardArea(
+        2,2,
+        3.5*G.CARD_W, --xpadding
+        0.75*G.CARD_H, --ypadding
+        {card_limit = 0, type = 'play', highlight_limit = 0})
+      for k, v in ipairs(cards) do
+          local card = Card(0,0, 0.75*G.CARD_W, 0.75*G.CARD_H, G.P_CARDS[v[1]], G.P_CENTERS.c_base)
+          cardarea:emplace(card)
+      end
+    
+      return {n=G.UIT.R, config={align = "cm", colour = G.C.WHITE, r = 0.1}, nodes={
+        {n=G.UIT.C, config={align = "cm"}, nodes={
+          {n=G.UIT.O, config={object = cardarea}}
+        }}
+      }}
+end
+
+function generate_sandiwch_cards(Scards)
+    local cardarea = CardArea(
+        2,2,
+        math.min(3.5*G.CARD_W,G.CARD_W*#Scards), --xpadding
+        0.75*G.CARD_H, --ypadding
+        {card_limit = 0, type = 'play', highlight_limit = 0})
+
+    if #Scards > 0 then
+        for x=1, #Scards do
+            local funnycard = make_card(Scards[x][1],nil, cardarea, nil, G.C.SECONDARY_SET.Spectral)
+            ease_value(funnycard.T, 'scale',-0.2,nil,'REAL',true,0.1)
+            for a, m in pairs(Scards[x][2]) do
+                if m then
+                    funnycard:set_ability(G.P_CENTERS[tostring(a)]);
+                end
+            end
+            if Scards[x][3] ~= nil and Scards[x][3]["key"] ~= nil then
+                funnycard:set_edition(Scards[x][3]["key"],true,true);
+            end
+            if Scards[x][4] ~= nil then
+                funnycard:set_seal(Scards[x][4],true,true);
+            end
+        end
+    end
+    
+      return {n=G.UIT.R, config={align = "cm", colour = G.C.WHITE, r = 0.1}, nodes={
+        {n=G.UIT.C, config={align = "cm"}, nodes={
+          {n=G.UIT.O, config={object = cardarea}}
+        }}
+      }}
+end
+
 --===========RESOURCES============
+
+-- from Cryptid, for drawing the third layer in cards, modified to liking and hopefully not clash with cryptid's own third layer
+SMODS.DrawStep({
+	key = "float2",
+	order = 59,
+	func = function(self)
+		if
+			self.config.center.soul_pos
+			and self.config.center.soul_pos.extra9
+			and (self.config.center.discovered or self.bypass_discovery_center)
+		then
+			local scale_mod = 0.07
+			local rotate_mod = 0.02*math.cos(1.219*G.TIMERS.REAL) + 0.00*math.cos((G.TIMERS.REAL)*math.pi*5)*(1 - (G.TIMERS.REAL - math.floor(G.TIMERS.REAL)))^2
+			self.children.float2:draw_shader(
+				"dissolve",
+				0,
+				nil,
+				nil,
+				self.children.center,
+				scale_mod,
+				rotate_mod,
+				nil,
+				0.1 + 0.03*math.cos(1.8*G.TIMERS.REAL),
+				nil,
+				0.6
+			)
+			self.children.float2:draw_shader(
+				"dissolve",
+				nil,
+				nil,
+				nil,
+				self.children.center,
+				scale_mod,
+				rotate_mod
+			)
+		end
+	end,
+	conditions = { vortex = false, facing = "front" },
+})
+SMODS.draw_ignore_keys.float2 = true
 
 SMODS.Atlas{
     key = 'Jokers',
@@ -427,6 +537,12 @@ SMODS.Atlas{
 SMODS.Atlas{
     key = 'crk',
     path = 'crk.png', 
+    px = 71, 
+    py = 95 
+}
+SMODS.Atlas{
+    key = 'supernatural',
+    path = 'supernatural.png', 
     px = 71, 
     py = 95 
 }
@@ -454,6 +570,12 @@ SMODS.Atlas{
     px = 1280, 
     py = 720
 }
+SMODS.Atlas{
+    key = 'jesus',
+    path = 'hispower.png', 
+    px = 640, 
+    py = 360
+}
 
 SMODS.Sound({
 	key = 'rah',
@@ -476,6 +598,37 @@ SMODS.Sound({
 })
 
 SMODS.Sound({
+	key = 'asriel_star',
+	path = 'mus_sfx_star.ogg',
+})
+
+SMODS.Sound({
+	key = 'asriel_hit',
+	path = 'snd_bomb.ogg',
+})
+
+SMODS.Sound({
+	key = 'und_explode',
+	path = 'mus_explosion.ogg',
+})
+
+SMODS.Sound({
+	key = 'und_flash',
+	path = 'mus_sfx_eyeflash.ogg',
+})
+
+SMODS.Sound({
+	key = 'asriel_goner',
+	path = 'mus_sfx_hypergoner_laugh.ogg',
+})
+
+SMODS.Sound({
+	key = 'bell',
+	path = 'bell.ogg',
+})
+
+
+SMODS.Sound({
 	key = 'music_hopes_and_dreams',
 	path = 'hopes_and_dreams.ogg',
     pitch = 1,
@@ -491,7 +644,7 @@ SMODS.Sound({
     pitch = 1,
     sync = false,
     select_music_track = function()
-        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.remaining_hits <= 1) and 1e9 or false
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.ending == true) and 1e9 or false
     end,
 })
 
@@ -511,6 +664,30 @@ SMODS.Atlas({
     frames = 17
 })
 
+SMODS.Atlas({ 
+    key = "att_slash", 
+    atlas_table = "ANIMATION_ATLAS", 
+    path = "asrielslash.png", 
+    px = 123, py = 161, 
+    frames = 9
+})
+
+SMODS.Atlas({ 
+    key = "att_star", 
+    atlas_table = "ANIMATION_ATLAS", 
+    path = "starboom.png", 
+    px = 292, py = 292, 
+    frames = 5
+})
+
+SMODS.Atlas({ 
+    key = "att_goner", 
+    atlas_table = "ANIMATION_ATLAS", 
+    path = "hypergoner.png", 
+    px = 640, py = 360, 
+    frames = 8
+})
+
 SMODS.Rarity {
 	key = 'fusion',
 	loc_txt = {
@@ -528,6 +705,16 @@ SMODS.Rarity {
 	badge_colour = HEX('dcdcdc'),
     default_weight = 0.01,
 }
+
+SMODS.Rarity {
+	key = 'super',
+	loc_txt = {
+		name = 'Supernatural'
+	},
+	badge_colour = HEX('d10020'),
+    default_weight = 0,
+}
+
 
 SMODS.ConsumableType{
     key = 'amalgams',
@@ -634,8 +821,9 @@ SMODS.Joker{
     loc_txt = {
         name = 'Burning Spice Cookie',
         text = {
-          'Destroys up to {C:attention}3{} cards in your hand, and',
-          'gains {X:mult,C:white}+#2#{} per card destroyed in the process',
+          'Deals {C:mult}#4# damage{} {C:attention}#5#{} times',
+          'to cards in your hand randomly, and',
+          'gains {X:mult,C:white}x#2#{} per card {C:mult}damaged',
           '{C:mult,s:1.2,E:1}#3#{}',
           '{X:mult,C:white,s:2}x#1#{s:2,C:mult} Mult{}',
         },
@@ -649,15 +837,17 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true, 
     pos = {x = 0, y = 0},
-    soul_pos = {x = 1, y = 0, extra = {x = 2, y = 0}},
+    soul_pos = {x = 1, y = 0, extra9 = {x = 2, y = 0}},
     config = { 
       extra = {
         xmult = 1,
-        gain = 0.35
+        gain = 0.35,
+        dmg = 5,
+        amount = 3
       }
     },
     loc_vars = function(self,info_queue,center)
-        return {vars = {center.ability.extra.xmult,center.ability.extra.gain, burnspiceYap[math.random(#burnspiceYap)]}}
+        return {vars = {center.ability.extra.xmult,center.ability.extra.gain, burnspiceYap[math.random(#burnspiceYap)],center.ability.extra.dmg,center.ability.extra.amount}}
     end,
     set_badges = function(self, card, badges)
         badges[#badges+1] = create_badge('Beast', HEX('66041E'), G.C.WHITE, 1)
@@ -665,21 +855,18 @@ SMODS.Joker{
     end,
     calculate = function(self,card,context)
         if context.pre_joker then
-            local cardlist = G.hand.cards
             local didathing = false
-            for i=1,3 do
-                card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.gain
+            for i=1,card.ability.extra.amount do
                 G.E_MANAGER:add_event(Event({
                     trigger = "before",
                     delay = 1,
                     func = function()
-                        if #cardlist >= 1 then
-                            local _chosen, _chosenId = pseudorandom_element(cardlist,pseudoseed('crk'))
-                            table.remove(cardlist,_chosenId)
-                            _chosen:start_dissolve(nil, true)
+                        if #G.hand.cards >= 1 then
+                            card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.gain;
+                            local _chosen = pseudorandom_element(G.hand.cards,pseudoseed('crk'))
+                            _chosen:damage_card(card.ability.extra.dmg);
                             didathing = true
-                            SMODS.calculate_effect({ message = "Destroyed!", colour = G.C.MULT, instant = true}, _chosen)
-                            SMODS.calculate_effect({ message = "+" ..card.ability.extra.gain.." Mult", colour = G.C.MULT, instant = true}, card)
+                            SMODS.calculate_effect({ message = "+x" ..card.ability.extra.gain.." Mult", colour = G.C.MULT, instant = true}, card)
                         end
                         return true
                     end
@@ -723,7 +910,7 @@ SMODS.Joker{
         name = 'Shadow Milk Cookie',
         text = {
           'Playing cards are {C:white,X:chips}Concealed{}',
-          'gains {X:mult,C:white}+#2#{} per card deceived.',
+          'gains {X:mult,C:white}x#2#{} per card deceived.',
           '{C:chips}[After playing, Concealed cards reveal themselves]{}',
           '{C:chips,s:1.2,E:1}#3#{}',
           '{X:mult,C:white,s:2}x#1#{s:2,C:mult} Mult{}',
@@ -738,7 +925,7 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true, 
     pos = {x = 0, y = 1},
-    soul_pos = {x = 1, y = 1, extra = {x = 2, y = 1}},
+    soul_pos = {x = 1, y = 1, extra9 = {x = 2, y = 1}},
     config = { 
       extra = {
         xmult = 1,
@@ -817,7 +1004,7 @@ SMODS.Joker{
         name = 'Mystic Flour Cookie',
         text = {
           'Cards played are {C:white,X:inactive}Wiped.{}',
-          'Gains {X:chips,C:white}+x#2#{} per card',
+          'Gains {X:chips,C:white}x#2#{} per card',
           'returned to their origin.',
           '{C:chips}Chips{} are then {C:attention}added to{} {C:mult}Mult{}',
           '{C:inactive,s:1.2,E:1}#3#{}',
@@ -833,7 +1020,7 @@ SMODS.Joker{
     eternal_compat = true,
     perishable_compat = true, 
     pos = {x = 0, y = 2},
-    soul_pos = {x = 1, y = 2, extra = {x = 2, y = 2}},
+    soul_pos = {x = 1, y = 2, extra9 = {x = 2, y = 2}},
     config = { 
       extra = {
         xchip = 1,
@@ -1080,7 +1267,7 @@ SMODS.Joker{
 		card.ability.extra.type = pseudorandom_element(_poker_hands, pseudoseed('pokerhand'))
 	end,
     calculate = function(self,card,context)
-        if (context.cardarea == G.jokers and context.before and not context.blueprint) or context.setting_blind  then
+        if (context.cardarea == G.jokers and context.before) or context.setting_blind  then
 			if context.scoring_name == card.ability.extra.type then
                 card:speak('-'..card.ability.extra.percent..'% Blind Size',G.C.FILTER)
 				change_blind_size(to_big(G.GAME.blind.chips) - (to_big(G.GAME.blind.chips)*to_big(card.ability.extra.percent*0.01)))
@@ -1093,6 +1280,135 @@ SMODS.Joker{
         end
     end,
 }
+
+SMODS.Joker{
+    key = 'bible',
+    loc_txt = {
+        name = 'The Holy Bible',
+        text = {
+          '{C:attention}Cleanses and enlightens you.{}'
+        },
+    },
+    atlas = 'Jokers', 
+    rarity = 2,
+    cost = 0,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = false, 
+    eternal_compat = true,
+    perishable_compat = false, 
+    pos = {x = 4, y = 0},
+    add_to_deck = function(self, card, from_debuff)
+        display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 0)
+        play_sound('ninehund_und_flash', 1,0.5);
+        for _, j in pairs(G.jokers.cards) do
+            j:start_dissolve(nil,true);
+        end
+        for _, c in pairs(G.consumeables.cards) do
+            c:start_dissolve(nil,true);
+        end
+        ease_hands_played(2- G.GAME.current_round.hands_left,true);
+        ease_discard(0 - G.GAME.current_round.discards_left,true);
+        ease_dollars(-G.GAME.dollars-77, true)
+        G.GAME.round_resets.hands = 2
+        G.GAME.round_resets.discards = 0
+        card:set_eternal(true);
+        G.GAME.nine_biblekillcount = 1;
+    end,
+    calculate = function(self,card,context)
+        if context.questionably_drew and not context.blueprint then
+            G.GAME.nine_disableplay = true;
+            for i, k in ipairs(G.hand.cards) do
+                G.E_MANAGER:add_event(Event({
+                    trigger = "before",
+                    delay = 2/(G.GAME.nine_biblekillcount+(i*0.3)),
+                    timer = "REAL",
+                    blocking = true,
+                    func = function()
+                        G.GAME.nine_biblekillcount = G.GAME.nine_biblekillcount + 0.3;
+                        card:juice_up(G.GAME.nine_biblekillcount-1, G.GAME.nine_biblekillcount-1);
+                        G.GAME.nine_musicspeed = 1+((G.GAME.nine_biblekillcount+(i*0.3))*0.2);
+                        display_image({x=math.random(0,6),y=0}, "ninehund_jesus", {x = 0, y = 0, sx = 23.2, sy = 13.05}, 0)
+                        play_sound('ninehund_bell',1,0.5);
+                        k:start_dissolve(nil, true);
+                        return true
+                    end
+                })) 
+            end
+        end
+    end,
+}
+
+SMODS.Joker{
+    key = 'asrieljoker',
+    loc_txt = {
+        name = 'Core of Desire',
+        text = {
+          'When a card is {C:mult}damaged{}:',
+          'Increase the {X:mult,C:white}Health{} and {X:mult,C:white}MaxHealth{}',
+          'of the card by {X:green,C:white}#1#{}.',
+          'Gain {X:purple,C:white}^#3#{}.',
+          '{X:purple,C:white,s:2}^#2#{C:purple,s:2} Mult',
+          "{C:inactive,s:0.8}Half of the world's prayers.",
+        },
+    },
+    atlas = 'supernatural', 
+    rarity = 'ninehund_super',
+    cost = 99,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = true, 
+    eternal_compat = true,
+    perishable_compat = false, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 1, y = 0, extra9 = {x = 2, y = 0}},
+    config = { 
+        extra = {
+        e_mult = 1.01,
+        heal = 1,
+        gain = 0.01
+      }
+    },
+    loc_vars = function(self,info_queue,center)
+        return {vars = {center.ability.extra.heal,center.ability.extra.e_mult,center.ability.extra.gain}}
+    end,
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Singular', HEX('525A65'), G.C.WHITE, 1)
+    end,
+    add_to_deck = function(self, card, from_debuff)
+        card:set_eternal(true);
+        local find = find_joker('j_ninehund_asrieljoker');
+        if #find > 0 then
+            find[1].ability.extra.heal = find[1].ability.extra.heal + 1;
+            find[1].ability.extra.gain = find[1].ability.extra.gain + 0.01;
+            SMODS.calculate_effect({ message = "Upgrade!", colour = G.C.PURPLE, instant = false}, find[1])
+            card:start_dissolve(nil, true);
+        end
+    end,
+    calculate = function(self,card,context)
+        if context.joker_main then
+            return {
+                card = card,
+                emult = card.ability.extra.e_mult,
+            }
+        end
+        if context.card_damaged then
+            context.card_damaged.ability.health = context.card_damaged.ability.health + card.ability.extra.heal;
+            context.card_damaged.ability.max_health = context.card_damaged.ability.max_health + card.ability.extra.heal;
+            card.ability.extra.e_mult = card.ability.extra.e_mult + card.ability.extra.gain;
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.15,
+                func = function()
+                    SMODS.calculate_effect({ message = "+" ..card.ability.extra.heal, colour = G.C.GREEN, instant = true}, context.card_damaged)
+                    SMODS.calculate_effect({ message = "+^" ..card.ability.extra.gain, colour = G.C.PURPLE, instant = true}, card)
+                    return true
+                end
+            }))
+        end
+    end,
+}
+
 
 --====================CONSUMABLES======================
 
@@ -1239,7 +1555,7 @@ SMODS.Consumable{
             trigger = "after",
             delay = 0.2,
             func = function()
-                display_image({x=0,y=0}, "ninehund_whitescreen", 1280, 720, 1)
+                display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 1)
                 play_sound('ninehund_boom',0.5)
                 G.ROOM.jiggle = 100
                 for k = 1, #G.hand.cards do
@@ -1376,7 +1692,7 @@ SMODS.Consumable{
             trigger = "after",
             delay = 0.2,
             func = function()
-                display_image({x=0,y=0}, "ninehund_whitescreen", 1280, 720, 0)
+                display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 0)
                 play_sound('ninehund_boom',0.8)
                 force_set_blind('bl_ninehund_asriel');
                 return true
@@ -1483,6 +1799,17 @@ SMODS.Enhancement{
     in_pool = function()
         return false
     end,
+    loc_vars = function(self, info_queue, card)
+        return {
+            main_end = (card.ability.Scards ~= nil) and {
+                {n=G.UIT.C, config={align = "bm", minh = 0.4}, nodes={
+                    {n=G.UIT.C, config={ref_table = self, align = "m", colour = G.C.CLEAR, r = 0.05, padding = 0.06}, nodes={
+                        generate_sandiwch_cards(card.ability.Scards)
+                    }}
+                }}
+            } or nil
+        }
+    end
 }
 
 --================VOUCHERS==================
@@ -1500,6 +1827,9 @@ SMODS.Voucher{
     config = {},
     unlocked = true,
     discovered = true,
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Ghost Joker', G.C.GREY, G.C.WHITE, 0.8)
+    end,
     calculate = function(self,card,context) --Scards = {S_R, enhancements [table], edition [table], seal}
         if context.but_first then
             for i=1, #context.full_hand do
@@ -1574,6 +1904,7 @@ local asriel_attacks = {
         end
     end,
     function()
+        display_anim({x=20,y=0}, "ninehund_att_slash", {x=-8,y=12}, 0.5)
         G.E_MANAGER:add_event(Event({
             trigger = 'before',
             delay = 0.4,
@@ -1588,6 +1919,7 @@ local asriel_attacks = {
         }))
     end,
     function()
+        display_anim({x=50,y=0}, "ninehund_att_slash", {x=8,y=12}, 0.5)
         G.E_MANAGER:add_event(Event({
             trigger = 'before',
             delay = 0.4,
@@ -1600,6 +1932,22 @@ local asriel_attacks = {
                 return true
             end
         }))
+    end,
+    function()
+        play_sound('ninehund_asriel_star', math.random(9,11)*0.1,0.5);
+        display_anim({x=math.random(-100,100),y=0}, "ninehund_att_star", {x=8,y=8}, 0.1)
+        G.ROOM.jiggle = 4
+        for i=1, #G.hand.cards do
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.2,
+                func = function()
+                    play_sound('ninehund_asriel_hit', math.random(9,11)*0.1,0.5);
+                    pseudorandom_element(G.hand.cards, pseudoseed('attack')):damage_card(2);
+                    return true
+                end
+            }))
+        end
     end,
 }
 
@@ -1616,20 +1964,67 @@ SMODS.Blind	{
     atlas = "asriel",
     pos = {x = 0, y = 0},
     vars = {},
-    dollars = 9,
-    mult = 2,
+    dollars = 20,
     no_debuff = true,
+    mult = 2,
     remaining_hits = 6,
     set_blind = function(self)
         self.remaining_hits = 6
         self.starting = true
+        self.ending = false
+        self.finalatt = false
+        local find = find_joker('j_ninehund_asrieljoker');
+        if #find > 0 then
+            for _, f in pairs(find) do
+                SMODS.debuff_card(f,true,"asriel")
+            end
+        end
     end,
     drawn_to_hand = function(self)
         if self.starting then
             self.starting = false;
+        elseif self.finalatt then
+            self.finalatt = false;
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    play_sound('ninehund_asriel_goner', 1,0.5);
+                    display_anim({x=0,y=0}, "ninehund_att_goner", {x=32,y=18}, 3, true)
+                    for i=1, #G.hand.cards do
+                        G.hand.cards[i]:damage_card(0);
+                    end
+                    return true
+                end
+            }))
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                timer = "REAL",
+                delay = 2.5,
+                func = function()
+                    display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 0)
+                    play_sound('ninehund_und_flash', 0.6,0.5);
+                    for i=1, #G.hand.cards do
+                        G.hand.cards[i].ability.health = 1;
+                    end
+                    return true
+                end
+            }))
         else
             pseudorandom_element(asriel_attacks, pseudoseed('attack'))();
         end
+    end,
+    defeat = function(self)
+        G.GAME.nine_musicspeed = 1;
+        local find = find_joker('j_ninehund_asrieljoker',true);
+        if #find > 0 then
+            for _, f in pairs(find) do
+                SMODS.debuff_card(f,false,"asriel")
+            end
+        end
+        local _card = create_card('Joker',G.jokers,nil,nil,nil,nil,'j_ninehund_asrieljoker');
+        _card:add_to_deck()
+        _card:start_materialize()
+        G.jokers:emplace(_card)
     end,
     cap_score = function(self, score, deco)
         if not deco then
@@ -1639,6 +2034,20 @@ SMODS.Blind	{
                 ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
                 ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
+                G.E_MANAGER:add_event(Event({
+                    trigger = "before",
+                    delay = 0.1,
+                    blockable = true,
+                    func = function()
+                        if self.remaining_hits <= 1 then
+                            self.ending = true
+                            self.finalatt = true
+                        end
+                        play_sound('ninehund_und_explode', math.random(9,11)*0.1,0.5);
+                        display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 0)
+                        return true
+                    end
+                })) 
                 for o = 1, 20 do
                     G.E_MANAGER:add_event(Event({
                         trigger = "before",
@@ -1653,17 +2062,20 @@ SMODS.Blind	{
                 play_area_status_text(self.remaining_hits.." out of 6 left.", false, 2);
                 refresh_deck();
             elseif self.remaining_hits <= 1 then
-                for o = 1, 20 do
-                    G.E_MANAGER:add_event(Event({
-                        trigger = "before",
-                        delay = o*0.01,
-                        func = function()
-                            ease_background_colour({new_colour = hsvToRgb(((o/3)+(self.remaining_hits*3))/20,1,(20/o)/20,1), special_colour = hsvToRgb(((o/3)+(self.remaining_hits*6))/20,1,1,1), contrast = 2})
-                            G.ROOM.jiggle = 20/o
-                            return true
+                G.E_MANAGER:add_event(Event({
+                    trigger = "before",
+                    delay = 0.1,
+                    blockable = true,
+                    func = function()
+                        if (to_big(G.GAME.chips) + to_big(score)) >= to_big(G.GAME.blind.chips) then
+                            display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 1)
+                            play_sound('ninehund_und_explode', math.random(9,11)*0.1,0.5);
+                            self.ending = false;
+                            G.GAME.nine_musicspeed = 0.01;
                         end
-                    })) 
-                end
+                        return true
+                    end
+                })) 
                 return score
             else
                 play_area_status_text("MISS", false, 2);

@@ -20,6 +20,8 @@ position = "at"
 payload = "ease_to = G.GAME.chips + (G.GAME.blind.cap_score and G.GAME.blind:cap_score(math.floor(hand_chips*mult),false) or math.floor(hand_chips*mult)),"
 match_indent = true
 
+
+
 # very confusing for some reason
 [[patches]]
 [patches.pattern]
@@ -60,3 +62,52 @@ if not cus then
 end
 '''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "G.GAME.blind:drawn_to_hand()"
+position = "after"
+payload = "SMODS.calculate_context({questionably_drew = true});"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+    if G.GAME.current_round.discards_left <= 0 or #G.hand.highlighted <= 0 then 
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+'''
+position = 'after'
+match_indent = true
+payload = '''
+elseif G.GAME.nine_disableplay then
+    e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+    e.config.button = nil
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+    if #G.hand.highlighted <= 0 or G.GAME.blind.block_play or #G.hand.highlighted > 5 then 
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+'''
+position = 'after'
+match_indent = true
+payload = '''
+elseif G.GAME.nine_disableplay then
+    e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+    e.config.button = nil
+'''
+
+# music speed modulation!!
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = "G.PITCH_MOD = (G.PITCH_MOD or 1)*(1 - dt) + dt*((not G.normal_music_speed and G.STATE == G.STATES.GAME_OVER) and 0.5 or 1)"
+position = 'at'
+match_indent = true
+payload = "G.PITCH_MOD = (G.PITCH_MOD or 1)*(1 - dt) + dt*((not G.normal_music_speed and G.STATE == G.STATES.GAME_OVER) and 0.5 or 1 * (G.GAME.nine_musicspeed or 1))"
