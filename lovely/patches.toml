@@ -3,6 +3,36 @@ version = "1.0.0"
 dump_lua = true
 priority = 1
 
+# PATCH THAT makes sure that the images i make
+# draw behind the game menus and popups, this is pretty cool!!
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''
+    if (self.OVERLAY_MENU) or (not self.F_HIDE_BG) then
+        if self.OVERLAY_MENU and self.OVERLAY_MENU ~= self.CONTROLLER.dragging.target then
+'''
+position = 'before'
+match_indent = true
+payload = '''
+    if #ninehund.imagetable.images > 0 then
+        if G.STAGE == G.STAGES.MAIN_MENU then --terminate at main menu
+            ninehund.imagetable.images = {}
+        end
+        for _, v in pairs(ninehund.imagetable.images) do
+            love.graphics.setColor(1, 1, 1, v.alpha)
+            if v.sprite then
+                love.graphics.draw(v.image,ninehund.imagetable.frames[v.name][v.frame], v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
+            else
+                love.graphics.draw(v.image, v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
+            end
+            if v.func ~= nil and not self.OVERLAY_MENU then
+                v.func(v)
+            end
+        end
+    end
+'''
+
 # Patches lifted straight from Cryptid (The Tax effect), and from https://github.com/Mysthaps/LobotomyCorp
 [[patches]]
 [patches.pattern]
@@ -111,3 +141,88 @@ pattern = "G.PITCH_MOD = (G.PITCH_MOD or 1)*(1 - dt) + dt*((not G.normal_music_s
 position = 'at'
 match_indent = true
 payload = "G.PITCH_MOD = (G.PITCH_MOD or 1)*(1 - dt) + dt*((not G.normal_music_speed and G.STATE == G.STATES.GAME_OVER) and 0.5 or 1 * (G.GAME.nine_musicspeed or 1))"
+
+# this might be fucked up but oh my god i have to know if this works
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''
+          local _float, _silent, _pop_in, _bump, _spacing = nil, true, nil, nil, nil
+'''
+position = 'after'
+match_indent = true
+payload = '''
+local _spasm = nil
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''
+          elseif part.control.E == '2' then
+            _bump = true; _spacing = 1
+'''
+position = 'after'
+match_indent = true
+payload = '''
+elseif part.control.E == '3' then
+_spasm = true
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = '''
+          final_line[#final_line].nodes[1] = {n=G.UIT.O, config={
+            object = DynaText({string = {assembled_string}, colours = {part.control.V and args.vars.colours[tonumber(part.control.V)] or loc_colour(part.control.C or nil)},
+            float = _float,
+            silent = _silent,
+            pop_in = _pop_in,
+            bump = _bump,
+            spacing = _spacing,
+            scale = 0.32*(part.control.s and tonumber(part.control.s) or args.scale  or 1)*desc_scale})
+          }}
+'''
+position = 'at'
+match_indent = true
+payload = '''
+final_line[#final_line].nodes[1] = {n=G.UIT.O, config={
+  object = DynaText({string = {assembled_string}, colours = {part.control.V and args.vars.colours[tonumber(part.control.V)] or loc_colour(part.control.C or nil)},
+  float = _float,
+  silent = _silent,
+  pop_in = _pop_in,
+  bump = _bump,
+  spacing = _spacing,
+  scale = 0.32*(part.control.s and tonumber(part.control.s) or args.scale  or 1)*desc_scale,
+  spasm = _spasm
+  })
+}}
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'engine/text.lua'
+pattern = '''
+        if self.config.float then letter.offset.y = (G.SETTINGS.reduced_motion and 0 or 1)*math.sqrt(self.scale)*(2+(self.font.FONTSCALE/G.TILESIZE)*2000*math.sin(2.666*G.TIMERS.REAL+200*k)) + 60*(letter.scale-1) end
+'''
+position = 'after'
+match_indent = true
+payload = '''
+if self.config.spasm then
+    letter.offset.y = (G.SETTINGS.reduced_motion and 0 or 1)*math.sqrt(self.scale)*(2+(self.font.FONTSCALE/G.TILESIZE)*3000*math.max(0, (math.random()+math.random(-1,0)) )) + 100*(letter.scale-1)
+end
+'''
+
+# on hand discard hook for blind effects, seems more convinent
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+            table.insert(cards, G.hand.highlighted[i])
+'''
+position = 'before'
+match_indent = true
+payload = '''
+local blindeval = G.GAME.blind:on_discard(G.hand.highlighted[i]) or nil
+if blindeval then removed = true end
+'''

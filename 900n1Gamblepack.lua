@@ -7,6 +7,13 @@ end
 local mod_path = "" .. SMODS.current_mod.path
 ninehund.path = mod_path
 
+ninehund.VH = {} --var holder! really only used for temporary varaible storage or whatever idk!
+ninehund.tycoon_space = 0 --for tycoon jokers!
+ninehund.tycoon_limit = 5 --limit for how many tycoon jokers don't take up a joker slot
+
+ninehund.ticks = 0 --a trick yahiamice used for ticking calculations
+ninehund.dtcounter = 0
+
 function Card:speak(text, col) --from Jen's Alamac
 	if type(text) == 'table' then text = text[math.random(#text)] end
 	card_eval_status_text(self, 'extra', nil, nil, nil, {message = text, colour = col or G.C.FILTER})
@@ -17,15 +24,11 @@ to_big = to_big or function(num)
     return num
 end
 
-local PCsuits = {
-    ["H"] = "Hearts",
-    ["D"] = "Diamonds",
-    ["C"] = "Clubs",
-    ["S"] = "Spades",
-}
+--LERRP!!!
+function lerp(a,b,t) return a * (1-t) + b * t end
+
 function Card:getSuit()
-    local suit_prefix = string.sub(self.base.suit, 1, 1)
-    return PCsuits[suit_prefix]
+    return self.base.suit
 end
 
 local PCranksSpecial = {
@@ -35,11 +38,10 @@ local PCranksSpecial = {
     [14] = "Ace"
 }
 function Card:getRank()
-    local rank_suffix = math.min(self.base.id, 14)
-    if rank_suffix > 10 and rank_suffix < 15 then
-        return PCranksSpecial[rank_suffix]
+    if self.base.id > 10 and self.base.id < 15 then
+        return PCranksSpecial[self.base.id]
     end
-    return tostring(rank_suffix)
+    return tostring(self.base.id)
 end
 
 local PCranksSuff = {
@@ -52,7 +54,10 @@ local PCranksSuff = {
 
 function Card:getS_R()
     local suit_prefix = string.sub(self.base.suit, 1, 1)
-    local rank_suffix = math.min(self.base.id, 14)
+    if self.base.suit == "ninehund_nosuit" then
+        suit_prefix = "ninehund_N"
+    end
+    local rank_suffix = self.base.id
     if rank_suffix > 9 and rank_suffix < 15 then
         rank_suffix = PCranksSuff[rank_suffix]
     end
@@ -155,6 +160,7 @@ function removepopup()
 end
 
 -- ripped from https://github.com/Mysthaps/LobotomyCorp (with permission...., hi myst lol), modified to be used as a function for image display
+-- legacy image display, i'd rather use this for simpler things, the downside is it gets in the way of the menu
 function display_image(pos, atlas, cframe, duration)
     G.nine_image_show = true
     G.nine_image_timer = 0
@@ -243,11 +249,21 @@ function loc_colour(_c, _default)
         loclolc()
     end
     G.ARGS.LOC_COLOURS.rainbow = G.C.RAINBOW
+    G.ARGS.LOC_COLOURS.void = G.C.VOID
     return loclolc(_c, _default)
 end
 
 local game_updateref = Game.update
 function Game.update(self, dt)
+    ninehund.dt = dt
+    ninehund.dtcounter = ninehund.dtcounter+dt
+
+    while ninehund.dtcounter >= 0.010 do
+        ninehund.ticks = ninehund.ticks + 1
+        ninehund.dtcounter = ninehund.dtcounter - 0.010
+        if G.GAME.blind and not self.OVERLAY_MENU then G.GAME.blind:per_tick(ninehund.ticks) end
+    end
+
     if G.nine_image_show then
         if G.nine_image_anim == true then
             G.nine_image:custom_animate(20)
@@ -264,12 +280,14 @@ function Game.update(self, dt)
         end
     end
 
-    if G.GAME.blind and G.GAME.blind.config.blind.no_debuff then 
-        G.GAME.blind.disabled = nil 
-    end
-    if G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.ending == true then
-        G.ROOM.jiggle = 2
-        ease_background_colour({new_colour = hsvToRgb(G.TIMERS.REAL*0.4,1,0.8,1), special_colour = hsvToRgb(G.TIMERS.REAL*0.5,1,1,1), contrast = 2})
+    if G.GAME.blind then
+        if G.GAME.blind.config.blind.no_debuff then 
+            G.GAME.blind.disabled = nil 
+        end
+        if G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.ending == true then
+            G.ROOM.jiggle = 2
+            ease_background_colour({new_colour = hsvToRgb(G.TIMERS.REAL*0.4,1,0.8,1), special_colour = hsvToRgb(G.TIMERS.REAL*0.5,1,1,1), contrast = 2})
+        end
     end
 
     --WHY DOES IT WORK LIKE THIS
@@ -287,8 +305,20 @@ end
 
 local insane_hook = G.FUNCS.evaluate_play
 function G.FUNCS.evaluate_play(e)
-    SMODS.calculate_context({but_first = true, full_hand = G.play.cards})
+    SMODS.calculate_context({sandwich = true, full_hand = G.play.cards}); --sandwich must come first!
+    SMODS.calculate_context({but_first = true, full_hand = G.play.cards});
     insane_hook(e)
+
+    --setting the most_played_poker_hand value
+    local _handname, _played, _order = 'High Card', -1, 100
+    for k, v in pairs(G.GAME.hands) do
+        if v.played > _played or (v.played == _played and _order > v.order) then
+            _played = v.played
+            _handname = k
+        end
+    end
+    G.GAME.current_round.most_played_poker_hand = _handname
+    G.nine_hrtmadness = 1
 end
 
 local peak_hook = SMODS.always_scores
@@ -351,11 +381,19 @@ function force_set_blind(key) --copied from DebugPlus, however it is similar to 
     end
 end
 
+local blindBGcolors = {
+    bl_ninehund_asriel = {new_colour = HEX("000000"), special_colour = HEX("FFFFFF"), contrast = 2},
+    bl_ninehund_fear = {new_colour = HEX("000000"), special_colour = HEX("45105A"), contrast = 2},
+    bl_ninehund_greed = {new_colour = HEX("000000"), special_colour = HEX("C8A24A"), contrast = 2},
+    bl_ninehund_hatred = {new_colour = HEX("000000"), special_colour = HEX("7C0503"), contrast = 2},
+    bl_ninehund_solitude = {new_colour = HEX("000000"), special_colour = HEX("234B91"), contrast = 2}
+}
+
 local ease_background_colour_blindref = ease_background_colour_blind
 function ease_background_colour_blind(state, blind_override)
     if G.GAME.blind then
-        if G.GAME.blind.config.blind.key == "bl_ninehund_asriel" then
-            ease_background_colour({new_colour = HEX("000000"), special_colour = HEX("FFFFFF"), contrast = 2})
+        if blindBGcolors[G.GAME.blind.config.blind.key] then
+            ease_background_colour(blindBGcolors[G.GAME.blind.config.blind.key])
             return
         end
     end
@@ -516,6 +554,168 @@ function generate_sandiwch_cards(Scards)
       }}
 end
 
+local bosshooklol = G.FUNCS.reroll_boss
+function G.FUNCS.reroll_boss(e)
+    if G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].no_reroll then
+        if not n_detectImage("NOREROLLNOTIF") then
+            n_makeImage(
+                "NOREROLLNOTIF","unskippable",
+                ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                2, 2,
+                function(self)
+                    self.timer = self.timer + ninehund.dt
+                    if self.timer < 2 then
+                        self.alpha = lerp(self.alpha,1,2*ninehund.dt)
+                    else
+                        if self.alpha > 0.02 then
+                            self.alpha = lerp(self.alpha,0,2*ninehund.dt)
+                        else
+                            n_removeImage("NOREROLLNOTIF")
+                        end
+                    end
+                end,
+                nil, nil, nil,
+                {
+                    timer = 0,
+                    alpha = 0
+                }
+            )
+        end
+        return
+    end
+    bosshooklol(e)
+end
+
+-- from cryptid/items/misc_joker.lua
+local lcpref = Controller.L_cursor_press
+function Controller:L_cursor_press(x, y)
+    lcpref(self, x, y)
+    if G and G.jokers and G.jokers.cards and not G.SETTINGS.paused then
+        SMODS.calculate_context({ cry_press = true })
+    end
+    if G.GAME.blind then
+        G.GAME.blind:on_click(x,y)
+    end
+end
+
+function Blind:on_click(x,y)
+	if not self.disabled then
+		local obj = self.config.blind
+		if obj.on_click and type(obj.on_click) == "function" then
+			obj:on_click(x,y)
+		end
+	end
+end
+
+function Blind:on_discard(card)
+	if not self.disabled then
+		local obj = self.config.blind
+		if obj.on_discard and type(obj.on_discard) == "function" then
+			return obj:on_discard(card)
+		end
+	end
+end
+
+function Blind:per_tick(t)
+	if not self.disabled then
+		local obj = self.config.blind
+		if obj.per_tick and type(obj.per_tick) == "function" then
+			return obj:per_tick(t)
+		end
+	end
+end
+
+--love2d collisition??!?1
+function CheckCollision(x1,y1,w1,h1,x2,y2,w2,h2)
+  return x1 < x2+w2 and
+         x2 < x1+w1 and
+         y1 < y2+h2 and
+         y2 < y1+h1
+end
+
+--why the fuck not, returns a random value between -1 and 1
+--mult just multiplies the value by the number which indicates the intensity of the range
+function n_randrange(mult)
+    return (math.random()+math.random(-1,0))*(mult or 1)
+end
+
+ninehund.bossrush = false
+ninehund.bossPending = {
+    bosses = {},
+    current = 0,
+    win = nil
+}
+
+local bossWinFanfare = {
+    ["pendant"] = function()
+        local find = find_joker('j_ninehund_necklace')
+        if #find > 0 then
+            G.E_MANAGER:add_event(Event({
+                func = function()
+                    n_makeImage(
+                        "purifiedsoul","purified",
+                        ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                        2, 2,
+                        function(self)
+                            self.timer = self.timer + ninehund.dt
+                            if self.timer < 4 then
+                                self.alpha = lerp(self.alpha,1,5*ninehund.dt)
+                            else
+                                if self.alpha > 0.02 then
+                                    self.alpha = lerp(self.alpha,0,2*ninehund.dt)
+                                else
+                                    n_removeImage("purifiedsoul")
+                                end
+                            end
+                        end,
+                        nil, nil, nil,
+                        {
+                            timer = 0,
+                            alpha = 0
+                        }
+                    )
+                    play_sound('whoosh_long',1,1)
+                    play_sound('explosion_release1',1,0.5)
+                    play_sound('magic_crumple2',1,2)
+                    find[1].children.center:set_sprite_pos({x=2,y=0})
+                    find[1]:juice_up()
+                    find[1].ability.extra.pure = true
+                    return true
+                end
+            })) 
+        end
+    end
+}
+
+local idontlikethewaythegameworks = get_new_boss
+function get_new_boss()
+    if ninehund.bossrush then
+        if  ninehund.bossPending.current >= #ninehund.bossPending.bosses then
+            if ninehund.bossPending.win ~= nil then
+                bossWinFanfare[ninehund.bossPending.win]()
+            end
+            ninehund.bossrush = false
+            ninehund.bossPending.win = nil
+            ninehund.bossPending.current = 0
+        else
+            ninehund.bossPending.current = ninehund.bossPending.current + 1
+            return ninehund.bossPending.bosses[ninehund.bossPending.current]
+        end
+    end
+    return idontlikethewaythegameworks()
+end
+
+local thisisgettingannoying = G.FUNCS.start_run
+G.FUNCS.start_run = function(e, args) 
+    ninehund.bossPending = {
+        bosses = {},
+        current = 0,
+        win = nil
+    }
+    ninehund.bossrush = false
+    thisisgettingannoying(e,ars)
+end
+
 --===========RESOURCES============
 
 -- from Cryptid, for drawing the third layer in cards, modified to liking and hopefully not clash with cryptid's own third layer
@@ -558,114 +758,158 @@ SMODS.DrawStep({
 })
 SMODS.draw_ignore_keys.float2 = true
 
+--====BLIND DESCRIPTIONS=====
+--from https://github.com/Mysthaps/LobotomyCorp ripped straight out of it lol
+--aperently a lib mod does the same effect
+function info_from_desc(blind_desc)
+    local width = 6
+    local desc_nodes = {}
+    localize{type = 'descriptions', key = blind_desc, set = "BlindDesc", nodes = desc_nodes, vars = {}}
+    local desc = {}
+    for _, v in ipairs(desc_nodes) do
+        desc[#desc+1] = {n=G.UIT.R, config={align = "cl"}, nodes=v}
+    end
+    return 
+    {n=G.UIT.R, config={align = "cl", colour = lighten(G.C.GREY, 0.4), r = 0.1, padding = 0.05}, nodes={
+        {n=G.UIT.R, config={align = "cl", padding = 0.05, r = 0.1}, nodes = localize{type = 'name', key = blind_desc, set = "BlindDesc", name_nodes = {}, vars = {}}},
+        {n=G.UIT.R, config={align = "cl", minw = width, minh = 0.4, r = 0.1, padding = 0.05, colour = desc_nodes.background_colour or G.C.WHITE}, nodes={{n=G.UIT.R, config={align = "cm", padding = 0.03}, nodes=desc}}}
+    }}
+end
 
---ASSETS
-SMODS.Atlas{
-    key = 'Jokers',
-    path = 'Jokers.png',
-    px = 71,
-    py = 95
+function create_UIBox_blind_desc(blindD)
+    local desc_lines = {}
+    for _, v in ipairs(blindD) do
+        desc_lines[#desc_lines+1] = info_from_desc(v)
+    end
+    return
+    {n=G.UIT.ROOT, config = {align = 'cm', colour = lighten(G.C.JOKER_GREY, 0.5), r = 0.1, emboss = 0.05, padding = 0.05}, nodes={
+        {n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 2.5, padding = 0.05, colour = G.C.GREY}, nodes={
+            {n=G.UIT.C, config = {align = "lm", padding = 0.1}, nodes = desc_lines}
+        }}
+    }}
+end
+
+local blind_hoverref = Blind.hover
+function Blind.hover(self)
+    if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then 
+        if not self.hovering and self.states.visible and self.children.animatedSprite.states.visible then
+            if self.config.blind.descriptions then
+                G.blind_desc = UIBox{
+                    definition = create_UIBox_blind_desc(self.config.blind.descriptions),
+                    config = {
+                        major = self,
+                        parent = nil,
+                        offset = {
+                            x = 0.15,
+                            y = 0.2 + 0.38*#self.config.blind.descriptions,
+                        },  
+                        type = "cr",
+                    }
+                }
+                G.blind_desc.attention_text = true
+                G.blind_desc.states.collide.can = false
+                G.blind_desc.states.drag.can = false
+                if self.children.alert then
+                    self.children.alert:remove()
+                    self.children.alert = nil
+                end
+            end
+        end
+    end
+    blind_hoverref(self)
+end
+
+local blind_stop_hoverref = Blind.stop_hover
+function Blind.stop_hover(self)
+    if G.blind_desc then
+        G.blind_desc:remove()
+        G.blind_desc = nil
+    end
+    blind_stop_hoverref(self)
+end
+
+--=====ASSETS======
+
+local atlas_list = {
+    Jokers = {'Jokers',71,95},
+    amalgam = {'amalgam',71,95},
+    crk = {'crk',71,95},
+    supernatural = {'supernatural',71,95},
+    custom = {'creative',71,95},
+    enhance = {'enhance',71,95},
+    vouchers = {'vouchers',71,95},
+    whitescreen = {'white',1280,720},
+    jesus = {'hispower',640,360},
+    hrt = {'hrt',71,95},
+    nosuit_lc = {'nosuit_lc',71,95},
+    nosuit_hc = {'nosuit_hc',71,95},
+    suiticon_lc = {'suiticon_lc',18,18},
+    suiticon_hc = {'suiticon_hc',18,18},
+    tycoon = {'tycoon',71,95},
+    necklace = {'necklace',71,95},
+
+
+    asriel = {'asrielBlind',34,34,true,21},
+    att_light = {'att_light',296,203,true,17},
+    att_slash = {'asrielslash',123,161,true,9},
+    att_star = {'starboom',292,292,true,5},
+    att_goner = {'hypergoner',640,360,true,8},
+
+    blocktales_blinds = {'blocktalesBlind',34,34,true,16}
 }
-SMODS.Atlas{
-    key = 'amalgam',
-    path = 'amalgam.png', 
-    px = 71, 
-    py = 95 
-}
-SMODS.Atlas{
-    key = 'crk',
-    path = 'crk.png', 
-    px = 71, 
-    py = 95 
-}
-SMODS.Atlas{
-    key = 'supernatural',
-    path = 'supernatural.png', 
-    px = 71, 
-    py = 95 
-}
-SMODS.Atlas{
-    key = 'custom',
-    path = 'creative.png', 
-    px = 71, 
-    py = 95 
-}
-SMODS.Atlas{
-    key = 'enhance',
-    path = 'enhance.png', 
-    px = 71, 
-    py = 95 
-}
-SMODS.Atlas{
-    key = 'vouchers',
-    path = 'vouchers.png', 
-    px = 71, 
-    py = 95 
-}
-SMODS.Atlas{
-    key = 'whitescreen',
-    path = 'white.png', 
-    px = 1280, 
-    py = 720
-}
-SMODS.Atlas{
-    key = 'jesus',
-    path = 'hispower.png', 
-    px = 640, 
-    py = 360
+
+--load atlases
+for k, v in pairs(atlas_list) do
+    local atlas = {
+        key = k,
+        path = v[1]..".png",
+        px = v[2],
+        py = v[3]
+    }
+    if v[4] then
+        atlas.atlas_table = "ANIMATION_ATLAS"
+        atlas.frames = v[5]
+    end
+    SMODS.Atlas(atlas)
+end
+
+local sound_list = {
+    rah = "rah",
+    boom = "boom",
+    asriel_light = "mus_sfx_a_lithit2",
+    asriel_swipe = "mus_sfx_swipe",
+    asriel_star = "mus_sfx_star",
+    asriel_hit = "snd_bomb",
+    und_explode = "mus_explosion",
+    und_flash = "mus_sfx_eyeflash",
+    asriel_goner = "mus_sfx_hypergoner_laugh",
+    bell = "bell",
+
+    hrt_bulletn = "hrt_bulletn",
+    hrt_comely = "hrt_comely",
+    hrt_cyan = "hrt_cyan",
+    hrt_doorknob = "hrt_doorknob",
+    hrt_downtown = "hrt_downtown",
+    hrt_garbage = "hrt_garbage",
+    hrt_jovial = "hrt_jovial",
+    hrt_legacy = "hrt_legacy",
+    hrt_lightning = "hrt_lightning",
+    hrt_mysterious = "hrt_mysterious",
+    hrt_nighttime = "hrt_nighttime",
+    hrt_resolute = "hrt_resolute",
+    hrt_superstitional = "hrt_superstitional",
+    horse = "horse"
 }
 
-SMODS.Sound({
-	key = 'rah',
-	path = 'rah.ogg',
-})
+--load sounds
+for k, v in pairs(sound_list) do
+    SMODS.Sound({
+        key = k,
+        path = v..".ogg",
+    })
+end
 
-SMODS.Sound({
-	key = 'boom',
-	path = 'boom.ogg',
-})
-
-SMODS.Sound({
-	key = 'asriel_light',
-	path = 'mus_sfx_a_lithit2.ogg',
-})
-
-SMODS.Sound({
-	key = 'asriel_swipe',
-	path = 'mus_sfx_swipe.ogg',
-})
-
-SMODS.Sound({
-	key = 'asriel_star',
-	path = 'mus_sfx_star.ogg',
-})
-
-SMODS.Sound({
-	key = 'asriel_hit',
-	path = 'snd_bomb.ogg',
-})
-
-SMODS.Sound({
-	key = 'und_explode',
-	path = 'mus_explosion.ogg',
-})
-
-SMODS.Sound({
-	key = 'und_flash',
-	path = 'mus_sfx_eyeflash.ogg',
-})
-
-SMODS.Sound({
-	key = 'asriel_goner',
-	path = 'mus_sfx_hypergoner_laugh.ogg',
-})
-
-SMODS.Sound({
-	key = 'bell',
-	path = 'bell.ogg',
-})
-
-
+--===MUSIC===
 SMODS.Sound({
 	key = 'music_hopes_and_dreams',
 	path = 'hopes_and_dreams.ogg',
@@ -686,44 +930,41 @@ SMODS.Sound({
     end,
 })
 
-SMODS.Atlas({ 
-    key = "asriel", 
-    atlas_table = "ANIMATION_ATLAS", 
-    path = "asrielBlind.png", 
-    px = 34, py = 34, 
-    frames = 21 
+SMODS.Sound({
+	key = 'music_greed',
+	path = 'blocktales_greed.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_greed") and 1e6 or false
+    end,
 })
-
-SMODS.Atlas({ 
-    key = "att_light", 
-    atlas_table = "ANIMATION_ATLAS", 
-    path = "att_light.png", 
-    px = 296, py = 203, 
-    frames = 17
+SMODS.Sound({
+	key = 'music_solitude',
+	path = 'blocktales_solitude.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_solitude") and 1e6 or false
+    end,
 })
-
-SMODS.Atlas({ 
-    key = "att_slash", 
-    atlas_table = "ANIMATION_ATLAS", 
-    path = "asrielslash.png", 
-    px = 123, py = 161, 
-    frames = 9
+SMODS.Sound({
+	key = 'music_fear',
+	path = 'blocktales_fear.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_fear") and 1e6 or false
+    end,
 })
-
-SMODS.Atlas({ 
-    key = "att_star", 
-    atlas_table = "ANIMATION_ATLAS", 
-    path = "starboom.png", 
-    px = 292, py = 292, 
-    frames = 5
-})
-
-SMODS.Atlas({ 
-    key = "att_goner", 
-    atlas_table = "ANIMATION_ATLAS", 
-    path = "hypergoner.png", 
-    px = 640, py = 360, 
-    frames = 8
+SMODS.Sound({
+	key = 'music_hatred',
+	path = 'blocktales_hatred.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_hatred") and 1e6 or false
+    end,
 })
 
 SMODS.Rarity {
@@ -732,7 +973,10 @@ SMODS.Rarity {
 		name = 'Fusion'
 	},
 	badge_colour = HEX('63BBE1'),
-    default_weight = 0.5,
+    default_weight = 0.1,
+    pools = {
+        ["Joker"] = true,
+    }
 }
 
 SMODS.Rarity {
@@ -741,7 +985,10 @@ SMODS.Rarity {
 		name = 'Icon Series'
 	},
 	badge_colour = HEX('dcdcdc'),
-    default_weight = 0.01,
+    default_weight = 0.02,
+    pools = {
+        ["Joker"] = true,
+    }
 }
 
 SMODS.Rarity {
@@ -753,6 +1000,30 @@ SMODS.Rarity {
     default_weight = 0,
 }
 
+SMODS.ObjectType({
+	key = "Fusions",
+	default = "j_reserved_parking",
+	cards = {},
+	inject = function(self)
+		SMODS.ObjectType.inject(self)
+	end,
+})
+
+SMODS.Suit{
+    key = "nosuit",
+    card_key = "N",
+    pos = {y = 0},
+    ui_pos = {x = 0, y = 0},
+    lc_atlas = "nosuit_lc",
+    hc_atlas = "nosuit_hc",
+    lc_ui_atlas = "suiticon_lc",
+    hc_ui_atlas = "suiticon_hc",
+    lc_colour = G.C.GREY,
+    hc_colour = G.C.VOID,
+    in_pool = function(self, args)
+        return false
+    end
+}
 
 SMODS.ConsumableType{
     key = 'amalgams',
@@ -773,6 +1044,13 @@ SMODS.ConsumableType{
 
 --AND FINALLY:
 --Load Library Files, shout out to yahiamice for where he got this code in his mod so i can finally separate my main lua file
+print("[900n1] lets load the image display functions!")
+local IDfunc, IDerr = SMODS.load_file("imageDisplaying.lua")
+if IDerr then
+    error(IDerr) 
+end
+IDfunc()
+
 local files = NFS.getDirectoryItems(mod_path .. "items")
 for _, file in ipairs(files) do
 	print("[900n1] loading le " .. file)

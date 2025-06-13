@@ -243,6 +243,38 @@ SMODS.Consumable{
     end,
 }
 
+ninehund.bossblindtable = {
+    {
+        key = 'bl_ninehund_asriel',
+        sprite = {
+            name = 'asrielshrug',
+            sx = 0, sy = 4,
+            func = function(self)
+                self.id = self.id + (1*ninehund.dt)
+                self.y = (ninehund.constants.CS.y) + (math.cos(self.id*2)*20)
+                self.frame = n_nextFrame(self.totalframes,6,self.id)
+                if ninehund.VH.d == 3 then
+                    self.sx = lerp(self.sx,1.5,10*ninehund.dt)
+                    self.sy = lerp(self.sy,1.5,10*ninehund.dt)
+                elseif ninehund.VH.d == 4 then
+                    self.sx = lerp(self.sx,0,10*ninehund.dt)
+                    self.sy = lerp(self.sy,10,10*ninehund.dt)
+                    if self.sx < 0.01 then
+                        n_removeImage("lol",true)
+                    end
+                end
+            end, 
+            sheet = {
+                frames = 4,
+                px = 207, py = 240
+            }
+        },
+        sound = function()
+            play_sound('ninehund_asriel_goner', 1,0.5);
+        end
+    }
+}
+
 SMODS.Consumable{
     key = 'undertaleref',
     set = 'Tarot',
@@ -250,7 +282,7 @@ SMODS.Consumable{
         name = 'Barrier',
         text = {
           'Randomly summons a',
-          '{E:1,C:attention} Special Boss Blind'
+          '{E:1,C:rainbow} Special Boss Blind'
         },
     },
     atlas = 'custom', 
@@ -260,29 +292,124 @@ SMODS.Consumable{
     pos = {x = 2, y = 0},
     config = {},
     can_use = function(self,card)
-        return not G.GAME.blind.in_blind
+        return not G.GAME.blind.in_blind and not G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].no_reroll
     end,
     use = function(self,card,area,copier)
-        for o = 1, 20 do
-            G.E_MANAGER:add_event(Event({
-                trigger = "before",
-                delay = 1/o,
-                func = function()
-                    card:juice_up(o/100,o/100)
-                    play_sound('tarot1', 1.2 * (o/20),1)
-                    return true
+        local chosenboss = pseudorandom_element(ninehund.bossblindtable,pseudoseed('barrier'))
+        ninehund.VH.a = 1000
+        ninehund.VH.b = 2
+        ninehund.VH.c = 1
+        ninehund.VH.d = 0
+        G.GAME.nine_musicspeed = 0.5
+        n_makeImage(
+            "souls","balatroblindsouls",
+            ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+            3, 3,
+            function(self)
+                ninehund.VH.c = ninehund.VH.c + ninehund.dt
+                if ninehund.VH.d == 0 then
+                    ninehund.VH.a = lerp(ninehund.VH.a,200,2*ninehund.dt)
+                    ninehund.VH.b = lerp(ninehund.VH.b,1,0.2*ninehund.dt)
+                    G.ROOM.jiggle = 0.5
+                    if ninehund.VH.a < 210 then
+                        ninehund.VH.d = 1
+                    end
+                elseif ninehund.VH.d == 1 then
+                    ninehund.VH.a = lerp(ninehund.VH.a,0,0.2*ninehund.dt)
+                    ninehund.VH.b = ninehund.VH.b * (1 + (0.3*ninehund.dt))
+                    G.ROOM.jiggle = 3
+                    if ninehund.VH.a < 100 then
+                        ninehund.VH.d = 2
+                    end
+                elseif ninehund.VH.d == 2 then
+                    ninehund.VH.a = lerp(ninehund.VH.a,0,2*ninehund.dt)
+                    ninehund.VH.b = ninehund.VH.b * (1 + (0.3*ninehund.dt))
+                    G.ROOM.jiggle = 10
+                    if ninehund.VH.a < 10 then
+                        ninehund.VH.d = 3
+                        G.ROOM.jiggle = 35
+                    end
+                elseif ninehund.VH.d == 3 then
+                    ninehund.VH.a = lerp(ninehund.VH.a,1000,ninehund.dt)
+                    ninehund.VH.b = ninehund.VH.b * (1 + (0.3*ninehund.dt))
+                    self.alpha = lerp(self.alpha,0,2*ninehund.dt)
+                    self.sx = lerp(self.sx,10,2*ninehund.dt)
+                    self.sy = lerp(self.sy,10,2*ninehund.dt)
+                    if ninehund.VH.a > 900 then
+                        ninehund.VH.d = 4
+                    end
                 end
-            })) 
+            end,
+            true, 1,
+            {
+                frames = 7,
+                px = 34, py = 34
+            }
+        )
+
+        for i=2, 7 do 
+            n_makeImage(
+                "souls","balatroblindsouls",
+                ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                3, 3,
+                function(self)
+                    self.x = (ninehund.constants.CS.x) + (math.sin((ninehund.VH.c * ninehund.VH.b) + ((self.id / 6) * 2 * math.pi))*ninehund.VH.a)
+                    self.y = (ninehund.constants.CS.y) + (math.cos((ninehund.VH.c * ninehund.VH.b) + ((self.id / 6) * 2 * math.pi))*-ninehund.VH.a)
+                end,
+                true, i,
+                {
+                    frames = 7,
+                    px = 34, py = 34
+                },
+                {
+                    id = i - 1
+                }
+            )
         end
         G.E_MANAGER:add_event(Event({
             trigger = "after",
             delay = 0.2,
             func = function()
-                display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 0)
-                play_sound('ninehund_boom',0.8)
-                force_set_blind('bl_ninehund_asriel');
+                play_sound('introPad1',1,1)
+                play_sound('splash_buildup',3,0.5)
+                force_set_blind(chosenboss.key);
                 return true
             end
-        })) 
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                if ninehund.VH.d == 3 then
+                    play_sound('whoosh_long',1,1)
+                    play_sound('explosion_release1',1,0.5)
+                    play_sound('magic_crumple2',1,2)
+                    play_sound('ninehund_boom',0.8)
+                    n_makeImage(
+                        "blindshow",chosenboss.sprite.name,
+                        ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                        chosenboss.sprite.sx, chosenboss.sprite.sy,
+                        chosenboss.sprite.func,
+                        true, 1,
+                        chosenboss.sprite.sheet,
+                        {
+                            id = 0
+                        }
+                    )
+                    chosenboss.sound()
+                    return true
+                end
+            end
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                if ninehund.VH.d == 4 then
+                    G.GAME.nine_musicspeed = 1
+                    return true
+                end
+            end
+        }))
     end,
 }

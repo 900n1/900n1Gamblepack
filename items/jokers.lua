@@ -84,16 +84,16 @@ SMODS.Joker{
     loc_txt = {
         name = 'Burning Spice Cookie',
         text = {
-          'Deals {C:mult}#4# damage{} {C:attention}#5#{} times',
-          'to cards in your hand randomly, and',
-          'gains {X:mult,C:white}x#2#{} per card {C:mult}damaged',
+          'Deals {X:red,C:white}#4#{C:red} damage{} {C:attention}#5#{} times',
+          'to cards {C:attention}in your hand{} randomly, and',
+          'gains {X:mult,C:white}X#2#{} per card {C:red}damaged',
           '{C:mult,s:1.2,E:1}#3#{}',
-          '{X:mult,C:white,s:2}x#1#{s:2,C:mult} Mult{}',
+          '{X:mult,C:white,s:2}X#1#{s:2,C:mult} Mult{}',
         },
     },
     atlas = 'crk', 
     rarity = "ninehund_icon",
-    cost = 4,
+    cost = 15,
     unlocked = true,
     discovered = true, 
     blueprint_compat = true, 
@@ -173,15 +173,15 @@ SMODS.Joker{
         name = 'Shadow Milk Cookie',
         text = {
           'Playing cards are {C:white,X:chips}Concealed{}',
-          'gains {X:mult,C:white}x#2#{} per card deceived.',
+          'gains {X:mult,C:white}X#2#{} per card deceived.',
           '{C:chips}[After playing, Concealed cards reveal themselves]{}',
           '{C:chips,s:1.2,E:1}#3#{}',
-          '{X:mult,C:white,s:2}x#1#{s:2,C:mult} Mult{}',
+          '{X:mult,C:white,s:2}X#1#{s:2,C:mult} Mult{}',
         },
     },
     atlas = 'crk', 
     rarity = "ninehund_icon",
-    cost = 4,
+    cost = 25,
     unlocked = true,
     discovered = true, 
     blueprint_compat = false, 
@@ -267,17 +267,17 @@ SMODS.Joker{
         name = 'Mystic Flour Cookie',
         text = {
           'Cards played are {C:white,X:inactive}Wiped.{}',
-          'Gains {X:chips,C:white}x#2#{} per card',
+          'Gains {X:chips,C:white}X#2#{} per card',
           'returned to their origin.',
-          '{C:mult}Mult{C:attention} increases{} by current{C:chips}Chips{}',
+          '{C:mult}Mult{C:attention} increases{} by current {C:chips}Chips{}',
           'after {C:chips}Chips{} have been multiplied.',
           '{C:inactive,s:1.2,E:1}#3#{}',
-          '{X:chips,C:white,s:2}x#1#{s:2,C:chips} Chips{}',
+          '{X:chips,C:white,s:2}X#1#{s:2,C:chips} Chips{}',
         },
     },
     atlas = 'crk', 
     rarity = "ninehund_icon",
-    cost = 4,
+    cost = 20,
     unlocked = true,
     discovered = true, 
     blueprint_compat = false, 
@@ -347,6 +347,7 @@ SMODS.Joker{
     },
     atlas = 'amalgam', 
     rarity = 'ninehund_fusion',
+    pools = {["Fusions"] = true},
     cost = 7,
     unlocked = true,
     discovered = true, 
@@ -407,6 +408,7 @@ SMODS.Joker{
     },
     atlas = 'amalgam', 
     rarity = 'ninehund_fusion',
+    pools = {["Fusions"] = true},
     cost = 10,
     unlocked = true,
     discovered = true, 
@@ -435,20 +437,21 @@ SMODS.Joker{
 }
 
 SMODS.Joker{
-    key = 'whitediamondjoker',
+    key = 'whitediamond',
     loc_txt = {
-        name = 'White Diamond Joker',
+        name = 'White Diamond',
         text = {
           'Scored cards with {C:attention}any of the four suits{} give:',
           '{C:money}$#1#{}',
           '{C:chips}+#3#{} Chips',
           '{C:mult}+#4#{} Mult',
-          '{C:green}#6# in #2# chance{} for {X:mult,C:white}x#5#{} Mult',
+          '{C:green}#6# in #2# chance{} for {X:mult,C:white}X#5#{} Mult',
           '{C:inactive}Perfection.',
         },
     },
     atlas = 'amalgam', 
     rarity = 'ninehund_fusion',
+    pools = {["Fusions"] = true},
     cost = 21,
     unlocked = true,
     discovered = true, 
@@ -507,6 +510,7 @@ SMODS.Joker{
     },
     atlas = 'amalgam', 
     rarity = 'ninehund_fusion',
+    pools = {["Fusions"] = true},
     cost = 7,
     unlocked = true,
     discovered = true, 
@@ -608,7 +612,7 @@ SMODS.Joker{
     loc_txt = {
         name = 'Core of Desire',
         text = {
-          'When a card is {C:mult}damaged{}:',
+          'When a card is {C:red}damaged{}:',
           'Increase the {X:mult,C:white}Health{} and {X:mult,C:white}MaxHealth{}',
           'of the card by {X:green,C:white}#1#{}.',
           'Gain {X:purple,C:white}^#3#{}.',
@@ -628,9 +632,9 @@ SMODS.Joker{
     soul_pos = {x = 1, y = 0, extra9 = {x = 2, y = 0}},
     config = { 
         extra = {
-        e_mult = 1.01,
+        e_mult = 1.1,
         heal = 1,
-        gain = 0.01
+        gain = 0.02
       }
     },
     loc_vars = function(self,info_queue,center)
@@ -676,4 +680,737 @@ SMODS.Joker{
             }))
         end
     end,
+}
+
+local hrt_horselist = {
+    regular = {
+        'bulletn',
+        'comely',
+        'cyan',
+        'doorknob',
+        'downtown',
+        'jovial',
+        'lightning',
+        'resolute',
+        'superstitional'
+    },
+    nightmare = {
+        'cyan',
+        'jovial',
+        'superstitional',
+        'garbage',
+        'mysterious',
+        'nighttime',
+        'legacy'
+    },
+    nightmare_lookup = {
+        ['cyan'] = true,
+        ['jovial'] = true,
+        ['superstitional'] = true,
+        ['garbage'] = true,
+        ['mysterious'] = true,
+        ['nighttime'] = true,
+        ['legacy'] = true
+    }
+}
+
+local hrt_horses = {
+    ["bulletn"] = {
+        color = HEX("0000FF"),
+        pos = {x = 0, y = 1},
+        key = "bulletn",
+        func = function(card,context)
+            if context.joker_main then
+                for k, v in pairs(context.full_hand) do
+                    if pseudorandom(pseudoseed('hrt')) < G.GAME.probabilities.normal / 3 then
+                        G.E_MANAGER:add_event(Event({
+                            trigger = "before",
+                            delay = 1,
+                            func = function()
+                                v:set_edition("e_foil",true)
+                                v:juice_up()
+                                card:juice_up()
+                                play_sound("foil1",math.random()*0.2 + 0.9,0.5)
+                                return true
+                            end
+                        })) 
+                    end
+                end
+                for k, v in pairs(G.hand.cards) do
+                    if v:is_suit('Spades') then
+                        SMODS.calculate_effect({xchips = 1.5},v)
+                    end
+                end
+            end
+        end
+    },
+    ["comely"] = {
+        color = HEX("FFA0FF"),
+        pos = {x = 1, y = 1},
+        key = "comely",
+        func = function(card,context)
+            if context.but_first then
+                for k, v in pairs(context.full_hand) do
+                    SMODS.change_base(v,"Hearts")
+                end
+            end
+            if context.individual and context.cardarea == G.play then
+                if context.other_card:getRank() == "Ace" then
+                    return {
+                            card = card,
+                            x_mult = 2,
+                        }
+                end
+            end
+        end
+    },
+    ["cyan"] = {
+        color = HEX("00CBCB"),
+        pos = {x = 4, y = 0},
+        key = "cyan",
+        func = function(card,context)
+            if context.discard and G.GAME.current_round.discards_used == 0 and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
+                local card = create_card(nil, G.consumeables, nil, nil, nil, nil, 'c_black_hole')
+                card:add_to_deck()
+                G.consumeables:emplace(card)
+            end
+        end
+    },
+    ["doorknob"] = {
+        color = HEX("5F1F17"),
+        pos = {x = 2, y = 1},
+        key = "doorknob",
+        func = function(card,context)
+            if context.repetition and context.cardarea == G.play then
+                if pseudorandom(pseudoseed('hrt')) < G.GAME.probabilities.normal / 2 then
+                    return {
+                        message = localize("k_again_ex"),
+                        repetitions = 3,
+                        card = card,
+                    }
+                end
+            end
+        end
+    },
+    ["downtown"] = {
+        color = HEX("4B4B4B"),
+        pos = {x = 3, y = 1},
+        key = "downtown",
+        func = function(card,context)
+            if context.joker_main then
+                for k, v in pairs(G.hand.cards) do
+                    SMODS.calculate_effect({xchips = 1.25},v)
+                end
+            end
+        end
+    },
+    ["jovial"] = {
+        color = HEX("F37700"),
+        pos = {x = 2, y = 0},
+        key = "jovial",
+        func = function(card,context)
+            if context.joker_main then
+                return {
+                    xchips = 2,
+                    x_mult = 5
+                }
+            end
+        end
+    },
+    ["lightning"] = {
+        color = HEX("FFFF43"),
+        pos = {x = 3, y = 0},
+        key = "lightning",
+        func = function(card,context)
+            if context.joker_main and context.scoring_name == G.GAME.current_round.most_played_poker_hand then
+                return {
+                    dollars = 10
+                }
+            end
+        end
+    },
+    ["resolute"] = {
+        color = HEX("C00000"),
+        pos = {x = 1, y = 0},
+        key = "resolute",
+        func = function(card,context)
+            if context.joker_main then
+                for k, v in pairs(context.full_hand) do
+                    if v:is_suit('Hearts') then
+                        SMODS.calculate_effect({x_mult = 1.5},v)
+                    end
+                end
+                for k, v in pairs(G.hand.cards) do
+                    if pseudorandom(pseudoseed('hrt')) < G.GAME.probabilities.normal / 3 then
+                        G.E_MANAGER:add_event(Event({
+                            trigger = "before",
+                            delay = 1,
+                            func = function()
+                                v:set_edition("e_holo",true)
+                                v:juice_up()
+                                card:juice_up()
+                                play_sound("holo1",math.random()*0.2 + 0.9,0.5)
+                                return true
+                            end
+                        })) 
+                    end
+                end
+            end
+        end
+    },
+    ["superstitional"] = {
+        color = HEX("FFFFFF"),
+        pos = {x = 4, y = 1},
+        key = "superstitional",
+        func = function(card,context)
+            if context.individual and context.cardarea == G.play then
+                if pseudorandom(pseudoseed('hrt')) < G.GAME.probabilities.normal / 6 then
+                    context.other_card:set_edition("e_polychrome",true)
+                    card:juice_up()
+                end
+            end
+        end
+    },
+    ["mysterious"] = {
+        color = HEX("CCCCCC"),
+        pos = {x = 1, y = 2},
+        key = "mysterious"
+    },
+    ["garbage"] = {
+        color = HEX("006666"),
+        pos = {x = 2, y = 2},
+        key = "garbage"
+    },
+    ["nighttime"] = {
+        color = HEX("003B3B"),
+        pos = {x = 3, y = 2},
+        key = "nighttime"
+    },
+    ["legacy"] = {
+        color = HEX("00FF21"),
+        pos = {x = 4, y = 2},
+        key = "legacy"
+    },
+}
+
+local hrt_nightmares = {
+    ["jovial"] = {
+        color = HEX("FF800B"),
+        pos = {x = 0, y = 3},
+        key = "jovial",
+        func = function(card,context)
+            if context.joker_main then
+                return {
+                    xchips = 10,
+                    x_mult = 2
+                }
+            end
+        end
+    },
+    ["cyan"] = {
+        color = HEX("00BFF8"),
+        pos = {x = 1, y = 3},
+        key = "cyan",
+        func = function(card,context)
+            if context.discard then
+                local card = create_card(nil, G.consumeables, nil, nil, nil, nil, 'c_black_hole')
+                card:set_edition("e_negative",true)
+                card:add_to_deck()
+                G.consumeables:emplace(card)
+            end
+        end
+    },
+    ["superstitional"] = {
+        color = HEX("FFFFFF"),
+        pos = {x = 2, y = 3},
+        key = "superstitional",
+        func = function(card,context)
+            if context.joker_main then
+                for k, v in pairs(G.hand.cards) do
+                    G.E_MANAGER:add_event(Event({
+                        trigger = "before",
+                        delay = 0.4,
+                        func = function()
+                            SMODS.change_base(v,nil,context.full_hand[1]:getRank())
+                            play_sound('generic1', math.random()*0.2 + 0.9,0.5)
+                            v:juice_up()
+                            card:juice_up()
+                            return true
+                        end
+                    })) 
+                end
+            end
+        end
+    },
+    ["mysterious"] = {
+        color = HEX("CCCCCC"),
+        pos = {x = 1, y = 2},
+        key = "mysterious",
+        func = function(card,context)
+            if context.joker_main then
+                local card = create_card(nil, G.consumeables, nil, nil, nil, nil, 'c_hanged_man')
+                card:add_to_deck()
+                G.consumeables:emplace(card)
+            end
+        end
+    },
+    ["garbage"] = {
+        color = HEX("006666"),
+        pos = {x = 2, y = 2},
+        key = "garbage",
+        func = function(card,context)
+            if context.repetition and context.cardarea == G.play then
+                context.other_card:set_seal("Purple",true)
+                return {
+                    message = localize("k_again_ex"),
+                    repetitions = 2,
+                    card = card,
+                }
+            end
+        end
+    },
+    ["nighttime"] = {
+        color = HEX("003B3B"),
+        pos = {x = 3, y = 2},
+        key = "nighttime",
+        func = function(card,context)
+            if context.joker_main then
+                for k, v in pairs(G.hand.cards) do
+                    G.E_MANAGER:add_event(Event({
+                        trigger = "before",
+                        delay = 0.5,
+                        func = function()
+                            v:damage_card(1)
+                            card:juice_up()
+                            return true
+                        end
+                    })) 
+                    if pseudorandom(pseudoseed('hrt')) < G.GAME.probabilities.normal / 2 then
+                        v:set_edition("e_negative",true)
+                    end
+                end
+            end
+        end
+    },
+    ["legacy"] = {
+        color = HEX("00FF21"),
+        pos = {x = 4, y = 2},
+        key = "legacy",
+        func = function(card,context)
+            local Hfunc = hrt_horses[pseudorandom_element(hrt_horselist.regular,pseudoseed('hrt'))].func(card,context)
+            if Hfunc ~= nil then
+                return Hfunc
+            end
+        end
+    },
+}
+
+SMODS.Joker{
+    key = 'hrtjoker',
+    loc_txt = {
+        name = 'Horse Race Test: High Rolling Tactics'
+    },
+    atlas = 'hrt', 
+    rarity = 'ninehund_icon',
+    cost = 16,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = true, 
+    eternal_compat = true,
+    perishable_compat = false, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 4, y = 3, extra9 = {x = 3, y = 3}},
+    config = { 
+        extra = {
+        horse = "na",
+        negative = false
+      }
+    },
+    loc_vars = function(self,info_queue,center)
+        if center.ability.extra.horse == "na" then
+        return {
+            vars = {G.GAME.probabilities.normal, colours = {G.C.RAINBOW}},
+            key = self.key.."_na", set = "Jokers"
+        }
+        end
+        if center.edition ~= nil then
+            if center.edition.key == "e_negative" and hrt_horselist.nightmare_lookup[center.ability.extra.horse] then
+                return {
+                    vars = {G.GAME.probabilities.normal, colours = {hrt_nightmares[center.ability.extra.horse].color}},
+                    key = self.key.."_"..center.ability.extra.horse.."_alt", set = "Jokers"
+                }
+            end
+        end
+        return {
+            vars = {G.GAME.probabilities.normal, colours = {hrt_horses[center.ability.extra.horse].color}},
+            key = self.key.."_"..center.ability.extra.horse, set = "Jokers"
+        }
+    end,
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Horse Race Test', HEX('FF800B'), G.C.WHITE, 1)
+        badges[#badges+1] = create_badge('By Blake Andrews', G.C.GREY, G.C.WHITE, 0.8)
+    end,
+    add_to_deck = function(self, card, from_debuff)
+        G.nine_hrtmadness = 1
+        card.ability.extra.negative = false
+        if card.edition ~= nil then
+            if card.edition.key == "e_negative" then
+                card.ability.extra.negative = true
+            end
+        end
+        if card.ability.extra.negative then
+            card.ability.extra.horse = pseudorandom_element(hrt_horselist.nightmare,pseudoseed('hrt'))
+            card.children.center:set_sprite_pos({x=0,y=2})
+            card.children.float2:set_sprite_pos(hrt_nightmares[card.ability.extra.horse].pos)
+        else
+            card.ability.extra.horse = pseudorandom_element(hrt_horselist.regular,pseudoseed('hrt'))
+            card.children.center:set_sprite_pos({x=0,y=0})
+            card.children.float2:set_sprite_pos(hrt_horses[card.ability.extra.horse].pos)
+        end
+    end,
+    calculate = function(self,card,context)
+        if card.ability.extra.horse ~= "na" then
+            if card.ability.extra.negative then
+                if hrt_nightmares[card.ability.extra.horse]["func"] ~= nil then
+                    local Hfunc = hrt_nightmares[card.ability.extra.horse].func(card,context)
+                    if Hfunc ~= nil then
+                        return Hfunc
+                    end
+                end
+            else
+                if hrt_horses[card.ability.extra.horse]["func"] ~= nil then
+                    local Hfunc = hrt_horses[card.ability.extra.horse].func(card,context)
+                    if Hfunc ~= nil then
+                        return Hfunc
+                    end
+                end
+            end
+        end
+        if context.end_of_round and not context.blueprint and context.cardarea == G.jokers then
+            card.ability.extra.negative = false
+            if card.edition ~= nil then
+                if card.edition.key == "e_negative" then
+                    card.ability.extra.negative = true
+                end
+            end
+            if card.ability.extra.negative then
+                card.ability.extra.horse = pseudorandom_element(hrt_horselist.nightmare,pseudoseed('hrt'))
+                card.children.center:set_sprite_pos({x=0,y=2})
+                card.children.float2:set_sprite_pos(hrt_nightmares[card.ability.extra.horse].pos)
+            else
+                card.ability.extra.horse = pseudorandom_element(hrt_horselist.regular,pseudoseed('hrt'))
+                card.children.center:set_sprite_pos({x=0,y=0})
+                card.children.float2:set_sprite_pos(hrt_horses[card.ability.extra.horse].pos)
+            end
+            card:juice_up()
+            G.E_MANAGER:add_event(Event({
+                trigger = "before",
+                delay = 0.1,
+                timer = "REAL",
+                func = function()
+                    play_sound("ninehund_horse", 1,1)
+                    G.GAME.nine_musicspeed = 0
+                    card:juice_up()
+                    return true
+                end
+            })) 
+            G.E_MANAGER:add_event(Event({
+                trigger = "after",
+                delay = 1,
+                timer = "REAL",
+                func = function()
+                    play_sound("ninehund_hrt_"..card.ability.extra.horse, 1,2)
+                    return true
+                end
+            })) 
+            G.E_MANAGER:add_event(Event({
+                trigger = "after",
+                delay = 5 / G.nine_hrtmadness,
+                timer = "REAL",
+                func = function()
+                    G.GAME.nine_musicspeed = 1
+                    return true
+                end
+            })) 
+            G.nine_hrtmadness = G.nine_hrtmadness + 1
+        end
+    end,
+}
+
+local tycoon_funcs = {
+    add_to_deck = function(self, card, from_debuff)
+        if ninehund.tycoon_space < ninehund.tycoon_limit then
+            G.jokers.config.card_limit = G.jokers.config.card_limit + 1
+            card.ability.extra.in_tycoon = true
+        end
+        ninehund.tycoon_space = ninehund.tycoon_space + 1
+    end,
+    remove_from_deck = function(self, card, from_debuff)
+        ninehund.tycoon_space = ninehund.tycoon_space - 1
+        if card.ability.extra.in_tycoon == true then
+		    G.jokers.config.card_limit = G.jokers.config.card_limit - 1
+        end
+	end,
+}
+
+SMODS.Joker{
+    key = 'tycoondropper',
+    loc_txt = {
+        name = 'Basic Iron Dropper',
+        text = {
+          'Before play, adds a temporary',
+          '{C:attention}Steel{} 2 of {C:void}Nothing{} with',
+          '{C:money}$#1# sell value{} to your',
+          'played hand',
+          '{X:inactive,C:white,s:0.8}#2#'
+        },
+    },
+    atlas = 'tycoon', 
+    rarity = 2,
+    cost = 5,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = true, 
+    eternal_compat = true,
+    perishable_compat = true, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 1, y = 0},
+    config = { 
+      extra = {
+        money = 2,
+        in_tycoon = false
+      }
+    },
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Tycoon Machine', G.C.GREY, G.C.WHITE, 1)
+    end,
+    loc_vars = function(self,info_queue,center)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+        return {vars = {center.ability.extra.money,
+            center.ability.extra.in_tycoon and "In Tycoon" or "Outside"
+        }}
+    end,
+    add_to_deck = tycoon_funcs.add_to_deck, remove_from_deck = tycoon_funcs.remove_from_deck,
+    calculate = function(self,card,context)
+        if context.but_first then
+            local ore = make_card("ninehund_N_2",nil, G.play, nil, G.C.SECONDARY_SET.Spectral)
+            ore:set_ability(G.P_CENTERS.m_steel)
+            ore.ability["is_sandwiched"] = true;
+            ore.sell_cost = card.ability.extra.money;
+            if ninehund.tycoon_space < ninehund.tycoon_limit and not card.ability.extra.in_tycoon then --make droppers occupy vacant slots
+                G.jokers.config.card_limit = G.jokers.config.card_limit + 1
+                card.ability.extra.in_tycoon = true
+            end
+        end
+        if context.destroy_card and context.cardarea == G.play then
+            if context.destroying_card.ability["is_sandwiched"] then
+                return { remove = true }
+            end
+        end
+    end,
+}
+
+SMODS.Joker{
+    key = 'tycoonfurnace',
+    loc_txt = {
+        name = 'Basic Furnace',
+        text = {
+          '{C:money}Sells{} the {C:attention}right-most{}',
+          'played card that has',
+          'not been {C:money}sold{} yet',
+          '{X:inactive,C:white,s:0.8}#1#'
+        },
+    },
+    atlas = 'tycoon', 
+    rarity = 2,
+    cost = 10,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = true, 
+    eternal_compat = true,
+    perishable_compat = true, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 2, y = 0},
+    config = { 
+      extra = {
+        in_tycoon = false
+      }
+    },
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Tycoon Machine', G.C.GREY, G.C.WHITE, 1)
+    end,
+    loc_vars = function(self,info_queue,center)
+        return {vars = {
+            center.ability.extra.in_tycoon and "In Tycoon" or "Outside"
+        }}
+    end,
+    add_to_deck = tycoon_funcs.add_to_deck, remove_from_deck = tycoon_funcs.remove_from_deck,
+    calculate = function(self,card,context)
+        if context.joker_main then
+            for i=#G.play.cards,1,-1 do
+                if G.play.cards[i].ability["sold"] == nil then
+                    G.play.cards[i].ability.sold = true
+                    ease_dollars(G.play.cards[i].sell_cost)
+                    G.E_MANAGER:add_event(Event({
+                        trigger = "before",
+                        delay = 1,
+                        func = function()
+                            G.play.cards[i]:start_dissolve()
+                            card:juice_up()
+                            return true
+                        end
+                    }))
+                    break
+                end
+            end
+        end
+        if context.but_first then
+            if ninehund.tycoon_space < ninehund.tycoon_limit and not card.ability.extra.in_tycoon then --make droppers occupy vacant slots
+                G.jokers.config.card_limit = G.jokers.config.card_limit + 1
+                card.ability.extra.in_tycoon = true
+            end
+        end
+        if context.destroy_card and context.cardarea == G.play then
+            if context.destroying_card.ability["sold"] then
+                return { remove = true }
+            end
+        end
+    end,
+}
+
+SMODS.Joker{
+    key = 'tycoonupgrader_basic',
+    loc_txt = {
+        name = 'Ore Purifier',
+        text = {
+          'Increases the {C:money}sell value{} of',
+          'the cards in {C:attention}played hand{}',
+          'by {C:money}$#1#{} if the card has',
+          'less than {C:money}$#3# sell value{}',
+          '{X:inactive,C:white,s:0.8}#2#'
+        },
+    },
+    atlas = 'tycoon', 
+    rarity = 2,
+    cost = 15,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = true, 
+    eternal_compat = true,
+    perishable_compat = true, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 3, y = 0},
+    config = { 
+      extra = {
+        upgrade = 1,
+        in_tycoon = false,
+        limit = 5
+      }
+    },
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Tycoon Machine', G.C.GREY, G.C.WHITE, 1)
+    end,
+    loc_vars = function(self,info_queue,center)
+        return {vars = { center.ability.extra.upgrade,
+            center.ability.extra.in_tycoon and "In Tycoon" or "Outside",
+            center.ability.extra.limit
+        }}
+    end,
+    add_to_deck = tycoon_funcs.add_to_deck, remove_from_deck = tycoon_funcs.remove_from_deck,
+    calculate = function(self,card,context)
+        if context.pre_joker then
+            for i=#G.play.cards,1,-1 do
+                if G.play.cards[i].sell_cost < card.ability.extra.limit then
+                    G.play.cards[i].sell_cost = G.play.cards[i].sell_cost + card.ability.extra.upgrade
+                end
+                G.E_MANAGER:add_event(Event({
+                    trigger = "before",
+                    delay = 1,
+                    func = function()
+                        card:juice_up()
+                        G.play.cards[i]:juice_up()
+                        return true
+                    end
+                }))
+            end
+        end
+        if context.but_first then
+            if ninehund.tycoon_space < ninehund.tycoon_limit and not card.ability.extra.in_tycoon then --make droppers occupy vacant slots
+                G.jokers.config.card_limit = G.jokers.config.card_limit + 1
+                card.ability.extra.in_tycoon = true
+            end
+        end
+    end,
+}
+
+
+local blocktalesbossrush = {
+    "bl_ninehund_greed",
+    "bl_ninehund_solitude",
+    "bl_ninehund_fear",
+    "bl_ninehund_hatred",
+}
+SMODS.Joker{
+    key = 'necklace',
+    loc_txt = {
+        name = 'The Pendant',
+    },
+    atlas = 'necklace', 
+    rarity = 'ninehund_super',
+    cost = 99,
+    unlocked = true,
+    discovered = true, 
+    blueprint_compat = true, 
+    eternal_compat = true,
+    perishable_compat = false, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 1, y = 0},
+    config = { 
+        extra = {
+        FUNNY = 2,
+        pure = false,
+      }
+    },
+    loc_vars = function(self,info_queue,center)
+        if center.ability.extra.pure then
+            return {
+                vars = {center.ability.extra.FUNNY},
+                key = self.key.."_purified", set = "Jokers"
+            }
+        end
+        return {
+            vars = {center.ability.extra.FUNNY},
+            key = self.key.."_unpure", set = "Jokers"
+        }
+    end,
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Singular', HEX('525A65'), G.C.WHITE, 1)
+        badges[#badges+1] = create_badge('Antimatter', G.C.VOID, G.C.WHITE, 1)
+    end,
+    add_to_deck = function(self, card, from_debuff)
+        card:set_eternal(true);
+        G.jokers.config.card_limit = G.jokers.config.card_limit + 1
+        local find = find_joker('j_ninehund_necklace');
+        if #find > 0 then
+            SMODS.calculate_effect({ message = "There can only be one.", colour = G.C.PURPLE, instant = false}, find[1])
+            card:start_dissolve(nil, true);
+            return
+        end
+        if not ninehund.bossrush then
+            ninehund.bossrush = true
+            ninehund.bossPending.bosses = blocktalesbossrush
+            ninehund.bossPending.win = "pendant"
+        end
+    end,
+    remove_from_deck = function(self, card, from_debuff)
+		G.jokers.config.card_limit = G.jokers.config.card_limit - 1
+	end,
+    calculate = function(self,card,context)
+        if context.joker_main and card.ability.extra.pure  then
+            return {
+                card = card,
+                echips = card.ability.extra.FUNNY,
+            }
+        end
+    end
 }

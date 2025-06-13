@@ -15,7 +15,7 @@ SMODS.Voucher{
         badges[#badges+1] = create_badge('Ghost Joker', G.C.GREY, G.C.WHITE, 0.8)
     end,
     calculate = function(self,card,context) --Scards = {S_R, enhancements [table], edition [table], seal}
-        if context.but_first then
+        if context.sandwich then
             for i=1, #context.full_hand do
                 if SMODS.has_enhancement(context.full_hand[i], 'm_ninehund_sandwichcard') and context.full_hand[i].ability["Scards"] ~= nil then
                     if #context.full_hand[i].ability.Scards > 0 then
