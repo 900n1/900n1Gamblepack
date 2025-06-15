@@ -413,3 +413,27 @@ SMODS.Consumable{
         }))
     end,
 }
+
+SMODS.Consumable{
+    key = 'krisknife',
+    set = 'nine_items',
+    loc_txt = {
+        name = "Kris' Knife",
+        text = {
+          'Opens a {C:void,S:1}Dark Fountain{}.'
+        },
+    },
+    atlas = 'itemCards', 
+    cost = 8,
+    unlocked = true,
+    discovered = true, 
+    pos = {x = 0, y = 0},
+    soul_pos = {x = 0, y = 1},
+    config = {},
+    can_use = function(self,card)
+        return not G.GAME.blind.in_blind and not G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].no_reroll
+    end,
+    use = function(self,card,area,copier)
+        card.children.floating_sprite:set_sprite_pos({x=10,y=10})
+    end,
+}

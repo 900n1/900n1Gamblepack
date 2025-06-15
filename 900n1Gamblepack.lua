@@ -847,6 +847,7 @@ local atlas_list = {
     suiticon_hc = {'suiticon_hc',18,18},
     tycoon = {'tycoon',71,95},
     necklace = {'necklace',71,95},
+    itemCards = {'itemCards',71,95},
 
 
     asriel = {'asrielBlind',34,34,true,21},
@@ -1040,6 +1041,25 @@ SMODS.ConsumableType{
         }
     },
     shop_rate = 0.1, --rate in shop out of 100
+}
+
+SMODS.ConsumableType{
+    key = 'nine_items',
+    collection_rows = {4,5},
+    primary_colour = G.C.WHITE,
+    secondary_colour = G.C.RAINBOW,
+    loc_txt = {
+        collection = 'Item Cards', 
+        name = 'Item',
+        undiscovered = {
+            name = '???',
+            text = {
+                'An unknown tool that',
+                'has yet to be discovered.'
+            } 
+        }
+    },
+    shop_rate = 0.5, --rate in shop out of 100
 }
 
 --AND FINALLY:
