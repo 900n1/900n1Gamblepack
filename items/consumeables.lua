@@ -141,7 +141,7 @@ SMODS.Consumable{
             trigger = "after",
             delay = 0.2,
             func = function()
-                display_image({x=0,y=0}, "ninehund_whitescreen", {x = 0, y = 0, sx = 32, sy = 18}, 1)
+                n_screen(1,1)
                 play_sound('ninehund_boom',0.5)
                 G.ROOM.jiggle = 100
                 for k = 1, #G.hand.cards do
@@ -250,7 +250,7 @@ ninehund.bossblindtable = {
             name = 'asrielshrug',
             sx = 0, sy = 4,
             func = function(self)
-                self.id = self.id + (1*ninehund.dt)
+                self.id = self.id + ninehund.dt
                 self.y = (ninehund.constants.CS.y) + (math.cos(self.id*2)*20)
                 self.frame = n_nextFrame(self.totalframes,6,self.id)
                 if ninehund.VH.d == 3 then
@@ -272,7 +272,52 @@ ninehund.bossblindtable = {
         sound = function()
             play_sound('ninehund_asriel_goner', 1,0.5);
         end
-    }
+    },
+    {
+        key = 'bl_ninehund_algebra',
+        sprite = {
+            name = 'white',
+            sx = 0, sy = 0,
+            func = function(self)
+                if self.id == 0 then
+                    self.id = 1
+                    for i=0,12 do 
+                        n_makeImage(
+                            "Abuttons","numberButtons",
+                            self.x, self.y, 0,
+                            0, 0,
+                            function(self)
+                                self.sx = lerp(self.sx,1.5,2*ninehund.dt)
+                                self.sy = lerp(self.sy,1.5,2*ninehund.dt)
+                                self.acc = self.acc + ninehund.dt
+                                self.x = self.x + self.rand2
+                                self.y = self.y + (self.acc*40)
+                                self.r = self.r + self.rand
+                            end,
+                            true, i+1,
+                            {
+                                frames = 13,
+                                px = 172, py = 74
+                            },
+                            {
+                                id = i, acc = math.random(-100,-30)*0.01, rand2 = n_randrange(10), rand = n_randrange(0.4)
+                            }
+                        )
+                    end
+                end
+                if ninehund.VH.d == 4 then
+                    n_removeImage("lol",true)
+                end
+            end, 
+            sheet = {
+                frames = 1,
+                px = 10, py = 10
+            }
+        },
+        sound = function()
+            play_sound('ninehund_algebra_intro', 1,0.75);
+        end
+    },
 }
 
 SMODS.Consumable{
@@ -420,20 +465,292 @@ SMODS.Consumable{
     loc_txt = {
         name = "Kris' Knife",
         text = {
-          'Opens a {C:void,S:1}Dark Fountain{}.'
+          'Opens a {C:void,S:1}Dark Fountain{}.',
+          'It is adviced to not use',
+          'more than once.'
         },
     },
     atlas = 'itemCards', 
-    cost = 8,
+    cost = 19,
     unlocked = true,
     discovered = true, 
     pos = {x = 0, y = 0},
     soul_pos = {x = 0, y = 1},
     config = {},
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Deltarune', G.C.VOID, G.C.WHITE, 0.8)
+    end,
+    loc_vars = function(self,info_queue,center)
+        info_queue[#info_queue+1] = { key = "ninehund_secsanccredit", set = "Other" }
+        return 
+    end,
     can_use = function(self,card)
-        return not G.GAME.blind.in_blind and not G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].no_reroll
+        return not G.GAME.blind.in_blind and (not G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].no_reroll or not G.GAME.n_darkworld)
     end,
     use = function(self,card,area,copier)
         card.children.floating_sprite:set_sprite_pos({x=10,y=10})
+        ninehund.VH.dft = 1
+        ninehund.VH.dft_bg = 1
+        ninehund.VH.dft_knife = 0
+        G.GAME.nine_musicspeed = 0.01
+        n_makeImage(
+            "knife","krisknife",
+            ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+            2, 2,
+            function(self)
+                self.counter = self.counter + ninehund.dt
+                if self.counter < 1.5 then
+                    self.y = (ninehund.constants.CS.y) + (math.cos(self.counter*2)*20)
+                elseif self.counter < 3 then
+                    self.y = lerp(self.y,ninehund.constants.CS.y - 300,ninehund.dt*3)
+                    self.x = lerp(self.x,ninehund.constants.CS.x * 1.5,ninehund.dt*3)
+                    self.r = lerp(self.r,math.rad(-180),ninehund.dt*5)
+                elseif self.counter < 3.12 then
+                    self.y = self.y + (8000*ninehund.dt)
+                elseif self.counter < 4 then
+                    ninehund.VH.dft_knife = 1
+                    G.GAME.n_darkworldCUTSCENE = true
+                    ninehund.VH.dft = 1
+                    if self.titan then
+                        self.ft3 = lerp(self.ft3,1,ninehund.dt*5)
+                        self.ft1 = (240+n_randrange(20))*self.ft3
+                        self.ft2 = (210+n_randrange(20))*self.ft3
+                        love.graphics.push()
+                        love.graphics.setColor(HEX("00E0EE"))
+                        love.graphics.rectangle("fill", (ninehund.constants.CS.x * 1.5)-(self.ft1*0.5),0, self.ft1,2000)
+                        love.graphics.setColor(HEX("BCEFE5"))
+                        love.graphics.rectangle("fill", (ninehund.constants.CS.x * 1.5)-(self.ft2*0.5),0, self.ft2,2000)
+                        love.graphics.pop()
+                    end
+                elseif self.counter < 9 then
+                    ninehund.VH.dft_bg = lerp(ninehund.VH.dft_bg,0.1,ninehund.dt*0.2)
+                    ninehund.VH.dft = 1
+                    if math.random() < 0.3 and not self.titan then
+                        n_makeImage(
+                        "smoke","ball",
+                        ninehund.constants.CS.x * 1.5, ninehund.constants.WS.y+100, 0,
+                        1, 1,
+                        function(self)
+                            self.acc = self.acc + ninehund.dt
+                            self.y = self.y - (100*ninehund.dt*self.acc*(self.rand3+1))
+                            self.x = self.x + (100*ninehund.dt*self.acc*self.rand*0.35)
+                            self.sx = self.acc*self.rand2
+                            self.sy = self.acc*self.rand2
+                            if self.y < -500 then
+                                n_removeImage("smoke",nil,self.id)
+                            end
+                        end, nil, nil, nil,
+                        {id = math.floor(self.counter*10),acc = 1,rand = n_randrange(),rand2 = (math.random()*0.5)+0.5,rand3 = math.random()}
+                        )
+                    elseif self.titan then
+                        self.ft1 = 240+n_randrange(20)
+                        self.ft2 = 210+n_randrange(20)
+                        love.graphics.push()
+                        love.graphics.setColor(HEX("00E0EE"))
+                        love.graphics.rectangle("fill", (ninehund.constants.CS.x * 1.5)-(self.ft1*0.5),0, self.ft1,2000)
+                        love.graphics.setColor(HEX("BCEFE5"))
+                        love.graphics.rectangle("fill", (ninehund.constants.CS.x * 1.5)-(self.ft2*0.5),0, self.ft2,2000)
+                        love.graphics.pop()
+                        if math.random() < 0.3 then
+                            n_makeImage(
+                            "smoke","sparkle",
+                            (ninehund.constants.CS.x * 1.5)+n_randrange(200), ninehund.constants.WS.y+50, 0,
+                            1, 1,
+                            function(self)
+                                self.acc = self.acc + (ninehund.dt*2)
+                                self.y = self.y - (100*ninehund.dt*self.acc*(self.rand3+1))
+                                self.x = self.x + (100*ninehund.dt*self.acc*self.rand*math.sin(self.acc*0.1))
+                                self.sx = (math.random()+0.1)*0.5
+                                self.sy = (math.random()+0.1)*0.5
+                                if self.y < -500 then
+                                    n_removeImage("smoke",nil,self.id)
+                                end
+                            end, nil, nil, nil,
+                            {id = math.floor(self.counter*10),acc = 1,rand = n_randrange(),rand2 = (math.random()*0.5)+0.5,rand3 = math.random()}
+                            )
+                        end
+                    end
+                elseif self.counter < 12 then
+                    ninehund.VH.dft_bg = lerp(ninehund.VH.dft_bg,0.1,ninehund.dt*0.6)
+                    ninehund.VH.dft = 1
+                    if self.titan then
+                        self.ft3 = lerp(self.ft3,0,ninehund.dt*5)
+                        self.ft1 = (240+n_randrange(10))*self.ft3
+                        self.ft2 = (210+n_randrange(10))*self.ft3
+                        love.graphics.push()
+                        love.graphics.setColor(HEX("00E0EE"))
+                        love.graphics.rectangle("fill", (ninehund.constants.CS.x * 1.5)-(self.ft1*0.5),0, self.ft1,2000)
+                        love.graphics.setColor(HEX("BCEFE5"))
+                        love.graphics.rectangle("fill", (ninehund.constants.CS.x * 1.5)-(self.ft2*0.5),0, self.ft2,2000)
+                        love.graphics.pop()
+                    end
+                elseif self.counter > 12 then
+                    if self.titan then
+                        ninehund.VH.dft_knife = 3
+                    else
+                        ninehund.VH.dft_knife = 2
+                    end
+                    n_removeImage("knife")
+                end
+            end,
+            nil,nil,nil,
+            {
+                counter = 0, titan = G.GAME.n_darkworld, ft1 = 140, ft2 = 110, ft3 = 0
+            }
+        )
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                if ninehund.VH.dft_knife == 1 then
+                    G.GAME.n_darkworld = true
+                    play_sound('whoosh_long',1,1)
+                    play_sound('ninehund_boom',0.5)
+                    return true
+                end
+            end
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                if ninehund.VH.dft_knife == 2 then
+                    G.GAME.n_darkworld = true
+                    G.GAME.nine_musicspeed = 1
+                    return true
+                elseif ninehund.VH.dft_knife == 3 then
+                    G.GAME.n_darkworld = true
+                    G.GAME.nine_musicspeed = 1
+                    force_set_blind("bl_ninehund_titan")
+                    return true
+                end
+            end
+        }))
+    end,
+}
+
+SMODS.Consumable{
+    key = 'pristineblade',
+    set = 'nine_items',
+    loc_txt = {
+        name = "A Pristine Blade",
+        text = {
+          'Removes {C:void,E:3}every{} instance',
+          'of the {C:attention}rank from the selected card',
+          'from {C:attention}your deck.'
+        },
+    },
+    atlas = 'itemCards', 
+    cost = 15,
+    unlocked = true,
+    discovered = true, 
+    pos = {x = 1, y = 0},
+    soul_pos = {x = 1, y = 1},
+    config = {},
+    set_badges = function(self, card, badges)
+        badges[#badges+1] = create_badge('Slay The Princess', HEX("211315"), G.C.WHITE, 0.8)
+    end,
+    can_use = function(self,card)
+        return #G.hand.highlighted == 1
+    end,
+    use = function(self,card,area,copier)
+        card.children.floating_sprite:set_sprite_pos({x=10,y=10})
+        local selectedcard = G.hand.highlighted[1]
+        local selectedrank = selectedcard.base.id
+        ninehund.VH.stp_knife = 0
+        n_makeImage(
+            "knife","pristineblade",
+            ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+            2, 2,
+            function(self)
+                self.counter = self.counter + ninehund.dt
+                if self.counter < 1 then
+                    self.y = (ninehund.constants.CS.y) + (math.cos(self.counter*2)*20)
+                    self.x = lerp(self.x,(79*1.5)+(selectedcard.children.center.CT.x*selectedcard.children.center.scale.x),ninehund.dt*3)
+                elseif self.counter < 1.2 then
+                    self.y = (selectedcard.children.center.CT.y*selectedcard.children.center.scale.y)-142
+                    ninehund.VH.stp_knife = 1
+                elseif self.counter > 2 then
+                    if self.alpha > 0.02 then
+                        self.alpha = lerp(self.alpha,0,2*ninehund.dt)
+                    else
+                        n_removeImage("knife")
+                    end
+                end
+            end,
+            nil,nil,nil,
+            {
+                counter = 0,
+            }
+        )
+        G.E_MANAGER:add_event(Event({
+            trigger = "after",
+            delay = 0.2,
+            func = function()
+                if ninehund.VH.stp_knife == 1 then
+                    selectedcard:start_dissolve(nil,true)
+                    for _, v in pairs(G.playing_cards) do
+                        if v.base.id == selectedrank then
+                            v:start_dissolve(nil,true)
+                        end
+                    end
+                    return true
+                end
+            end
+        }))
+        if (selectedrank >= 11 and selectedrank <= 13) and G.SETTINGS.CUSTOM_DECK.Collabs.Spades == "collab_STP" and selectedcard:getSuit() == "Spades" then
+            local easteregg = "narrator_princess"
+            if selectedrank == 11 then
+                easteregg = "narrator_himself"
+            elseif selectedrank == 13 then
+                easteregg = "narrator_you"
+            end
+            n_makeImage(
+                "narratorSTP",easteregg,
+                ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                2, 2,
+                function(self)
+                    self.timer = self.timer + ninehund.dt
+                    if self.timer < 5 then
+                        self.alpha = lerp(self.alpha,1,2*ninehund.dt)
+                    else
+                        if self.alpha > 0.02 then
+                            self.alpha = lerp(self.alpha,0,2*ninehund.dt)
+                        else
+                            n_removeImage("narratorSTP")
+                        end
+                    end
+                end,
+                nil, nil, nil,
+                {
+                    timer = 0,
+                    alpha = 0
+                }
+            )
+            G.SETTINGS.CUSTOM_DECK.Collabs.Spades = "default_Spades"
+        else
+            n_makeImage(
+                "narratorSTP","narrator"..math.random(1,3),
+                ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                2, 2,
+                function(self)
+                    self.timer = self.timer + ninehund.dt
+                    if self.timer < 3 then
+                        self.alpha = lerp(self.alpha,1,2*ninehund.dt)
+                    else
+                        if self.alpha > 0.02 then
+                            self.alpha = lerp(self.alpha,0,2*ninehund.dt)
+                        else
+                            n_removeImage("narratorSTP")
+                        end
+                    end
+                end,
+                nil, nil, nil,
+                {
+                    timer = 0,
+                    alpha = 0
+                }
+            )
+        end
     end,
 }

@@ -7,8 +7,10 @@ end
 local mod_path = "" .. SMODS.current_mod.path
 ninehund.path = mod_path
 
-ninehund.VH = {} --var holder! really only used for temporary varaible storage or whatever idk!
-ninehund.tycoon_space = 0 --for tycoon jokers!
+ninehund.VH = {
+    dft = 0, dft_bg = 0,
+} --var holder! really only used for temporary varaible storage or whatever idk!
+
 ninehund.tycoon_limit = 5 --limit for how many tycoon jokers don't take up a joker slot
 
 ninehund.ticks = 0 --a trick yahiamice used for ticking calculations
@@ -21,6 +23,9 @@ end
 
 --funny talisman
 to_big = to_big or function(num)
+    return num
+end
+to_number = to_number or function(num)
     return num
 end
 
@@ -38,8 +43,10 @@ local PCranksSpecial = {
     [14] = "Ace"
 }
 function Card:getRank()
-    if self.base.id > 10 and self.base.id < 15 then
-        return PCranksSpecial[self.base.id]
+    if type(self.base.id) == "number" then
+        if self.base.id > 10 and self.base.id < 15 then
+            return PCranksSpecial[self.base.id]
+        end
     end
     return tostring(self.base.id)
 end
@@ -71,7 +78,7 @@ function make_card(suitrank, enhancement, hand, num, secset)
     return create_playing_card({front = G.P_CARDS[suitrank], center = G.P_CENTERS[enhancement]}, hand, nil, num, {secset});
 end
 
-function change_blind_size(newsize, instant) --also from Jen's Alamac, sorry
+function change_blind_size(newsize, instant, silent) --also from Jen's Alamac, sorry
 	newsize = to_big(newsize)
 	G.GAME.blind.chips = newsize
 	local chips_UI = G.hand_text_area.blind_chips
@@ -79,8 +86,10 @@ function change_blind_size(newsize, instant) --also from Jen's Alamac, sorry
 		G.GAME.blind.chip_text = number_format(newsize)
 		G.FUNCS.blind_chip_UI_scale(G.hand_text_area.blind_chips)
 		G.HUD_blind:recalculate() 
-		chips_UI:juice_up()
-		play_sound('chips2')
+        if not silent then
+            chips_UI:juice_up()
+            play_sound('chips2')
+        end
 	else
 		G.E_MANAGER:add_event(Event({func = function()
 			G.GAME.blind.chip_text = number_format(newsize)
@@ -160,7 +169,7 @@ function removepopup()
 end
 
 -- ripped from https://github.com/Mysthaps/LobotomyCorp (with permission...., hi myst lol), modified to be used as a function for image display
--- legacy image display, i'd rather use this for simpler things, the downside is it gets in the way of the menu
+-- legacy image display, don't use this, unless you like the menu to fuck up a bit, currently only used for the purpose of the Bible
 function display_image(pos, atlas, cframe, duration)
     G.nine_image_show = true
     G.nine_image_timer = 0
@@ -284,7 +293,10 @@ function Game.update(self, dt)
         if G.GAME.blind.config.blind.no_debuff then 
             G.GAME.blind.disabled = nil 
         end
-        if G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.ending == true then
+        if G.GAME.blind.config.blind.no_pause then --might be dangerous, but hell, this is what you get for pausing timed events!
+            G.SETTINGS.paused = false
+        end
+        if G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.n_blindEnd == true then
             G.ROOM.jiggle = 2
             ease_background_colour({new_colour = hsvToRgb(G.TIMERS.REAL*0.4,1,0.8,1), special_colour = hsvToRgb(G.TIMERS.REAL*0.5,1,1,1), contrast = 2})
         end
@@ -386,7 +398,8 @@ local blindBGcolors = {
     bl_ninehund_fear = {new_colour = HEX("000000"), special_colour = HEX("45105A"), contrast = 2},
     bl_ninehund_greed = {new_colour = HEX("000000"), special_colour = HEX("C8A24A"), contrast = 2},
     bl_ninehund_hatred = {new_colour = HEX("000000"), special_colour = HEX("7C0503"), contrast = 2},
-    bl_ninehund_solitude = {new_colour = HEX("000000"), special_colour = HEX("234B91"), contrast = 2}
+    bl_ninehund_solitude = {new_colour = HEX("000000"), special_colour = HEX("234B91"), contrast = 2},
+    bl_ninehund_algebra = {new_colour = HEX("13A7DF"), special_colour = HEX("AB646A"), contrast = 1}
 }
 
 local ease_background_colour_blindref = ease_background_colour_blind
@@ -444,19 +457,18 @@ function refresh_deck()
     }))
 end
 
-G.localization.descriptions.Other['health'] = {
-    text = {
-        "{X:mult,C:white}Health:{C:mult} #1#/#2#"
-    }
-}
-
 local gen_card_old = generate_card_ui --code taken from https://github.com/art-muncher/Card-Value-Display
 function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end,card)
     full_UI_table = gen_card_old(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end,card)
+    local desc_nodes = full_UI_table.main
     if card and card.ability then
-        local desc_nodes = full_UI_table.main
         if card.ability.health ~= nil and card.ability.max_health ~= nil then
-            localize{type = 'other', key = 'health', nodes = desc_nodes, vars = {card.ability.health,card.ability.max_health}}
+            localize{type = 'other', key = 'ninehund_health', nodes = desc_nodes, vars = {card.ability.health,card.ability.max_health}}
+        end
+        if card.sell_cost then
+            if card.sell_cost > 1 and card.config.center.set == "Default" then
+                localize{type = 'other', key = 'ninehund_sell_cost', nodes = desc_nodes, vars = {card.sell_cost}}
+            end
         end
     end
     return full_UI_table
@@ -501,6 +513,26 @@ function Card:damage_card(dmg)
         self.ability.max_health = self.base.nominal;
         self.ability.health = self.ability.max_health;
         self:damage_card(dmg);
+    end
+end
+
+function Card:heal_card(heal,over,silent)
+    if self.ability.health ~= nil and self.ability.max_health ~= nil then
+        if heal ~= 0 then
+            if self.ability.health + heal > self.ability.max_health and not over then
+                self.ability.health = self.ability.max_health 
+            else
+                self.ability.health = self.ability.health + heal;
+            end
+            if not silent then
+                self:juice_up(-1,-1)
+                SMODS.calculate_effect({ message = "+" ..heal, colour = G.C.GREEN, instant = true}, self)
+            end
+        end
+    else
+        self.ability.max_health = self.base.nominal;
+        self.ability.health = self.ability.max_health;
+        self:heal_card(heal,over,silent);
     end
 end
 
@@ -633,18 +665,24 @@ function CheckCollision(x1,y1,w1,h1,x2,y2,w2,h2)
          y2 < y1+h1
 end
 
+--love2d centered text example?!?!?
+function drawCenteredText(rectX, rectY, rectWidth, rectHeight, text, scale, rotation)
+    if text == nil then return end
+	local font       = love.graphics.getFont()
+	local textWidth  = font:getWidth(text)
+	local textHeight = font:getHeight()
+	love.graphics.print(text, rectX+rectWidth/2, rectY+rectHeight/2, rotation, scale, scale, textWidth/2, textHeight/2)
+end
+
 --why the fuck not, returns a random value between -1 and 1
 --mult just multiplies the value by the number which indicates the intensity of the range
 function n_randrange(mult)
     return (math.random()+math.random(-1,0))*(mult or 1)
 end
-
-ninehund.bossrush = false
-ninehund.bossPending = {
-    bosses = {},
-    current = 0,
-    win = nil
-}
+--returns a positive or negative number randomly
+function n_randNeg(mult)
+    return (math.random(1,2)==1 and -1 or 1)*(mult or 1)
+end
 
 local bossWinFanfare = {
     ["pendant"] = function()
@@ -687,33 +725,52 @@ local bossWinFanfare = {
     end
 }
 
+
+--[[G.GAME.n_bossrush = false
+G.GAME.n_bossPending = {
+    bosses = {},
+    current = 0,
+    win = nil
+}]]
+
 local idontlikethewaythegameworks = get_new_boss
 function get_new_boss()
-    if ninehund.bossrush then
-        if  ninehund.bossPending.current >= #ninehund.bossPending.bosses then
-            if ninehund.bossPending.win ~= nil then
-                bossWinFanfare[ninehund.bossPending.win]()
+    if G.GAME.n_bossrush then
+        if  G.GAME.n_bossPending.current >= #G.GAME.n_bossPending.bosses then
+            if G.GAME.n_bossPending.win ~= nil then
+                bossWinFanfare[G.GAME.n_bossPending.win]()
             end
-            ninehund.bossrush = false
-            ninehund.bossPending.win = nil
-            ninehund.bossPending.current = 0
+            G.GAME.n_bossrush = false
+            G.GAME.n_bossPending.win = nil
+            G.GAME.n_bossPending.current = 0
         else
-            ninehund.bossPending.current = ninehund.bossPending.current + 1
-            return ninehund.bossPending.bosses[ninehund.bossPending.current]
+            G.GAME.n_bossPending.current = G.GAME.n_bossPending.current + 1
+            return G.GAME.n_bossPending.bosses[G.GAME.n_bossPending.current]
         end
     end
     return idontlikethewaythegameworks()
 end
 
-local thisisgettingannoying = G.FUNCS.start_run
-G.FUNCS.start_run = function(e, args) 
-    ninehund.bossPending = {
-        bosses = {},
-        current = 0,
-        win = nil
-    }
-    ninehund.bossrush = false
-    thisisgettingannoying(e,ars)
+local tycoonMustGrow = G.FUNCS.check_for_buy_space
+G.FUNCS.check_for_buy_space = function(card)
+    if card.edition ~= nil then
+        if card.edition.key == "e_negative" then --let me buy negative cards even when the inventory is full!!
+            return true
+        end
+    end
+    if card.ability.set == 'Joker' and type(card.ability.extra) == "table" then  --tycoon must grow
+        if card.ability.extra.in_tycoon ~= nil then
+            if (G.GAME.n_tycoon_space or 0) < ninehund.tycoon_limit then
+                return true
+            end
+        end
+    end
+    return tycoonMustGrow(card)
+end
+
+local hopeitdoesntbreak = poll_edition
+function poll_edition(_key, _mod, _no_neg, _guaranteed)
+    return hopeitdoesntbreak(_key, _mod, _no_neg, _guaranteed or G.GAME.n_darkworld)
 end
 
 --===========RESOURCES============
@@ -848,15 +905,14 @@ local atlas_list = {
     tycoon = {'tycoon',71,95},
     necklace = {'necklace',71,95},
     itemCards = {'itemCards',71,95},
-
+    titanspawn = {'titanSpawn',71,95},
+    tags = {'tags',34,34},
+    starwalker = {'starwalker',71,95},
 
     asriel = {'asrielBlind',34,34,true,21},
-    att_light = {'att_light',296,203,true,17},
-    att_slash = {'asrielslash',123,161,true,9},
-    att_star = {'starboom',292,292,true,5},
-    att_goner = {'hypergoner',640,360,true,8},
-
-    blocktales_blinds = {'blocktalesBlind',34,34,true,16}
+    blocktales_blinds = {'blocktalesBlind',34,34,true,16},
+    roaring_blinds = {'roaringBlind',34,34,true,21},
+    funny_blinds = {'funnyBlind',34,34,true,21}
 }
 
 --load atlases
@@ -885,6 +941,9 @@ local sound_list = {
     und_flash = "mus_sfx_eyeflash",
     asriel_goner = "mus_sfx_hypergoner_laugh",
     bell = "bell",
+    canweget = "muchhigher",
+    scream = "toofunny",
+    algebra_intro = "algebra_intro",
 
     hrt_bulletn = "hrt_bulletn",
     hrt_comely = "hrt_comely",
@@ -910,6 +969,31 @@ for k, v in pairs(sound_list) do
     })
 end
 
+--load... shaderz???
+G.SHADERS["n_bloom"] = love.graphics.newShader(
+[[extern vec2 size;
+extern int samples = 5;
+extern float quality = 2.5;
+
+vec4 effect(vec4 colour, Image tex, vec2 tc, vec2 sc)
+{
+  vec4 source = Texel(tex, tc);
+  vec4 sum = vec4(0);
+  int diff = (samples - 1) / 2;
+  vec2 sizeFactor = vec2(1) / size * quality;
+  
+  for (int x = -diff; x <= diff; x++)
+  {
+    for (int y = -diff; y <= diff; y++)
+    {
+      vec2 offset = vec2(x, y) * sizeFactor;
+      sum += Texel(tex, tc + offset);
+    }
+  }
+  
+  return ((sum / (samples * samples)) + source) * colour;
+}]]
+)
 --===MUSIC===
 SMODS.Sound({
 	key = 'music_hopes_and_dreams',
@@ -927,7 +1011,7 @@ SMODS.Sound({
     pitch = 1,
     sync = false,
     select_music_track = function()
-        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.blind.config.blind.ending == true) and 1e9 or false
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_asriel" and G.GAME.n_blindEnd == true) and 1e9 or false
     end,
 })
 
@@ -967,6 +1051,53 @@ SMODS.Sound({
         return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_hatred") and 1e6 or false
     end,
 })
+SMODS.Sound({
+	key = 'music_titan',
+	path = 'mus_titan.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_titan") and 1e6 or false
+    end,
+})
+SMODS.Sound({
+	key = 'music_algebra',
+	path = 'mus_algebra.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_algebra") and 1e6 or false
+    end,
+})
+SMODS.Sound({
+	key = 'music_atsky',
+	path = 'mus_atsky.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_starlight") and 1e6 or false
+    end,
+})
+
+SMODS.Sound({
+	key = 'music_darkWorld',
+	path = 'mus_darkworldBalala.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.n_darkworld) and 1e5 or false
+    end,
+})
+
+SMODS.Sound({
+	key = 'music_cbat',
+	path = 'mus_cbat.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.n_ithoughtitwasfunny) and 1e300 or false
+    end,
+})
 
 SMODS.Rarity {
 	key = 'fusion',
@@ -998,6 +1129,24 @@ SMODS.Rarity {
 		name = 'Supernatural'
 	},
 	badge_colour = HEX('d10020'),
+    default_weight = 0,
+}
+
+SMODS.Rarity {
+	key = 'burden',
+	loc_txt = {
+		name = 'Burnden'
+	},
+	badge_colour = HEX('000000'),
+    default_weight = 0,
+}
+
+SMODS.Rarity {
+	key = 'starwalker',
+	loc_txt = {
+		name = 'Starwalker'
+	},
+	badge_colour = HEX('FFF200'),
     default_weight = 0,
 }
 

@@ -441,6 +441,69 @@ return {
                 text = {
                     'Blind cannot be rerolled.'
                 }
+            },
+            ninehund_bdesc_nodebuff = {
+                name = "Impeding",
+                text = {
+                    'Blind cannot be debuffed.'
+                }
+            },
+            ninehund_bdesc_gameruin = {
+                name = "Pro Tip",
+                text = {
+                    'This blind is unlocked when opening a {C:void,E:1}Dark Fountain{}.'
+                }
+            },
+            ninehund_bdesc_titan = {
+                name = "Pure Despair",
+                text = {
+                    '{C:void,s:2,E:3}It only exists to destroy.',
+                    '{C:inactive}(Blind Song: GUARDIAN - Deltarune by Toby Fox)'
+                }
+            },
+            ninehund_bdesc_algebra = {
+                name = "You Know The Drill",
+                text = {
+                    'You {C:attention}cannot play a hand{} until you answer the given equation {C:green,E:1}correctly{}.',
+                    '{C:attention}Click on the buttons to input your answer.',
+                    '{C:mult,E:3}Failure{} to answer correctly {C:rainbow,E:1}within 10 seconds{} will {C:mult,E:3}deduct {}a {C:chips}hand{} for {C:attention}this round{}.',
+                    '{C:void,E:1}(Blind Song: Algebra by Function Phantom)'
+                }
+            },
+            ninehund_bdesc_nopause = {
+                name = "Live Event",
+                text = {
+                    '{s:1.5,C:red}The game cannot be paused.'
+                }
+            },
+            ninehund_bdesc_starlight = {
+                name = "Abbie",
+                text = {
+                    '{C:rainbow,E:1}Try and beat 10 minigames within a given time!',
+                    '{C:rainbow,E:1}Your hands count as lives! If you mess up you lose one!',
+                    '{C:rainbow,E:1}Keep up with the pace and stop reading this description!',
+                    '{C:void,E:1}(Blind Song: Although the Sky - Dorkus64)'
+                }
+            },
+        },
+        Other = {
+            ninehund_secsanccredit = {
+                name = "Background Song",
+                text = {
+                    "The Second Sanctuary - Deltarune",
+                    "{C:inactive,s:0.8}Song by Toby Fox",
+                    "{C:inactive,s:0.8}Cover by Siivagunner Submission"
+                }
+            },
+            ninehund_health = {
+                text = {
+                    "{X:mult,C:white}Health:{C:mult} #1#/#2#"
+                }
+            },
+            ninehund_sell_cost = {
+                text = {
+                    "{C:money}$#1# sell value"
+                }
             }
         }
     },

@@ -19,17 +19,23 @@ payload = '''
         if G.STAGE == G.STAGES.MAIN_MENU then --terminate at main menu
             ninehund.imagetable.images = {}
         end
+        love.graphics.push()
         for _, v in pairs(ninehund.imagetable.images) do
-            love.graphics.setColor(1, 1, 1, v.alpha)
+            if v.color then
+                love.graphics.setColor(v.color[1], v.color[2], v.color[3], v.alpha)
+            else
+                love.graphics.setColor(1, 1, 1, v.alpha)
+            end
             if v.sprite then
                 love.graphics.draw(v.image,ninehund.imagetable.frames[v.name][v.frame], v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
             else
                 love.graphics.draw(v.image, v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
             end
-            if v.func ~= nil and not self.OVERLAY_MENU then
+            if v.func ~= nil and (not self.OVERLAY_MENU or (G.GAME.blind and G.GAME.blind.config.blind.no_pause))then
                 v.func(v)
             end
         end
+        love.graphics.pop()
     end
 '''
 
@@ -225,4 +231,52 @@ match_indent = true
 payload = '''
 local blindeval = G.GAME.blind:on_discard(G.hand.highlighted[i]) or nil
 if blindeval then removed = true end
+'''
+
+# this is the thing that handles the dark fountain rendering in the bg
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''
+    if G.SPLASH_BACK then
+        if G.debug_background_toggle then
+            love.graphics.clear({0,1,0,1})
+        else
+            love.graphics.push()
+            G.SPLASH_BACK:translate_container()
+            G.SPLASH_BACK:draw()
+            love.graphics.pop()
+        end
+'''
+position = 'after'
+match_indent = true
+payload = '''
+    if G.GAME then
+        if G.GAME.n_darkworld then
+            love.graphics.push()
+            love.graphics.setColor(G.C.RAINBOW)
+            G.SHADERS['n_bloom']:send('size', 
+            {
+                ninehund.constants.WS.x*(0.2-(((math.sin(self.TIMERS.REAL*1.5)+1)/2)*0.1)),
+                ninehund.constants.WS.y
+            })
+            love.graphics.setShader(G.SHADERS['n_bloom'])
+            love.graphics.draw(ninehund.constants.FT, ninehund.constants.CS.x, ninehund.constants.CS.y, 0, 2.5, 2.5, 320, 180)
+            love.graphics.setShader()
+            love.graphics.setBlendMode("multiply","premultiplied")
+            love.graphics.rectangle("fill", -100,-100, 2000,2000)
+            love.graphics.setBlendMode("alpha")
+            love.graphics.pop()
+        end
+        if G.GAME.n_darkworldCUTSCENE then
+            love.graphics.push()
+            ninehund.VH.dft = lerp(ninehund.VH.dft,0,ninehund.dt*0.3)
+            love.graphics.setColor({ninehund.VH.dft_bg,ninehund.VH.dft_bg,ninehund.VH.dft_bg,ninehund.VH.dft})
+            love.graphics.rectangle("fill", -100,-100, 2000,2000)
+            love.graphics.pop()
+            if ninehund.VH.dft <= 0.05 then
+                G.GAME.n_darkworldCUTSCENE = false
+            end
+        end
+    end
 '''

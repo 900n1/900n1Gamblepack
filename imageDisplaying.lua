@@ -25,6 +25,8 @@ function n_LoadIMAGE(name)
     return (assert(love.graphics.newImage(tempimagedata),("[900] epic love.graphic.newImage fail")))
 end
 
+ninehund.constants.FT = n_LoadIMAGE("darkfoundeth")
+
 --also from yahimod but really modified, used to load in quads for image drawing
 function n_LoadSpriteSheet(name,frames,px,py)
     if ninehund.imagetable.loaded[name] == nil then ninehund.imagetable.loaded[name] = n_LoadIMAGE(name) end
@@ -109,6 +111,25 @@ function n_detectImage(key,id)
         end
     end
     return
+end
+
+function n_screen(_t,_d,_c)
+    n_makeImage(
+        "_whitescreen","white",
+        ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+        1000, 1000,
+        function(self)
+            self.timer = self.timer + ninehund.dt
+            if self.timer >= self.delay then
+                if self.alpha <= 0.02 then n_removeImage("_whitescreen") end
+                self.alpha = lerp(1,0,(self.timer - self.delay)/self.dur)
+            end
+        end,
+        nil, nil, nil,
+        {
+            timer = 0, delay = _d or 0, dur = _t or 1, color = type(_c)=="table" and _c or {1,1,1}
+        }
+    )
 end
 
 --original love.draw hook, it does the job if you don't mind images going over the menu
