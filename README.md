@@ -1,6 +1,8 @@
-# The 900n1 Gamblepack
+# ![icon](assets/1x/modicon.png) The 900n1 Gamblepack
 A questionable Balatro mod, personally tweaked by yours truly.
-Requires [Talisman](https://github.com/SpectralPack/Talisman) (>=2.2.0~dev) and [Steamodded](https://github.com/Steamodded/smods) (>=1.0.0~BETA-0301a)
+Requires [Talisman](https://github.com/SpectralPack/Talisman) and [Steamodded](https://github.com/Steamodded/smods) 
+
+![thumbnail](balatroModthumbnail.png)
 
 Adds 22 Jokers, 2 Tarots, 1 Spectral, 2 Amalgamate and Item Consumables, 5 Tags, 6 New Unique Boss Blinds (and 2 more hidden Blinds), 6 Decks (with [Card Sleeves](https://github.com/larswijn/CardSleeves) support), and much more!
 
