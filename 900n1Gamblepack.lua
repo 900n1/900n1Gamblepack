@@ -16,6 +16,60 @@ ninehund.tycoon_limit = 5 --limit for how many tycoon jokers don't take up a jok
 ninehund.ticks = 0 --a trick yahiamice used for ticking calculations
 ninehund.dtcounter = 0
 
+SMODS.current_mod.extra_tabs = function() --Credits tab
+    local scale = 0.5
+    return {
+        label = "Credits",
+        tab_definition_function = function()
+            ninehund.CREDITS = true
+            n_makeImage(
+                "credis","credits",
+                ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
+                2, 2,
+                function(self)
+                    self.counter = self.counter + ninehund.dt
+                    self.alpha = lerp(self.alpha,1,0.5*ninehund.dt)
+                    self.frame = n_nextFrame(self.totalframes,3,self.counter)
+                end,
+                true,1,{
+                    frames = 3,
+                    px = 960, py = 540
+                },
+                {
+                    counter = 0, alpha = 0
+                }
+            )
+        return {
+            n = G.UIT.ROOT,
+            config = {
+            align = "cm",
+            padding = 0.05,
+            colour = G.C.CLEAR,
+            },
+            nodes = {
+            {
+                n = G.UIT.R,
+                config = {
+                padding = 0,
+                align = "cm"
+                },
+                nodes = {
+                {
+                    n = G.UIT.T,
+                    config = {
+                    text = "(press esc to exit credits screen)",
+                    shadow = false,
+                    scale = scale*1.2,
+                    colour = G.C.WHITE
+                    }
+                }
+                }
+            },
+            }}
+        end
+    }
+end
+
 function Card:speak(text, col) --from Jen's Alamac
 	if type(text) == 'table' then text = text[math.random(#text)] end
 	card_eval_status_text(self, 'extra', nil, nil, nil, {message = text, colour = col or G.C.FILTER})
@@ -773,6 +827,23 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed)
     return hopeitdoesntbreak(_key, _mod, _no_neg, _guaranteed or G.GAME.n_darkworld)
 end
 
+--[[CUSTOM DECK!!!
+    one card in card_protos is set up like so:
+    {
+        s = (suit),
+        r = (rank),
+        e = (enhancement),
+        d = (edition),
+        g = (seal)
+    }
+]]
+function ninehund_customDeck(self,card_protos)
+    if self.GAME.starting_params.n_deck then
+        return self.GAME.starting_params.n_deck
+    end
+    return card_protos
+end
+
 --===========RESOURCES============
 
 -- from Cryptid, for drawing the third layer in cards, modified to liking and hopefully not clash with cryptid's own third layer
@@ -908,6 +979,9 @@ local atlas_list = {
     titanspawn = {'titanSpawn',71,95},
     tags = {'tags',34,34},
     starwalker = {'starwalker',71,95},
+    decks = {'decks',71,95},
+    sleeves = {'cardsleeves',73,95},
+    modicon = {'modicon',32,32},
 
     asriel = {'asrielBlind',34,34,true,21},
     blocktales_blinds = {'blocktalesBlind',34,34,true,16},
@@ -1061,6 +1135,15 @@ SMODS.Sound({
     end,
 })
 SMODS.Sound({
+	key = 'music_crumbling',
+	path = 'mus_crumble.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return (G.GAME and G.GAME.round_resets.blind_choices.Boss and G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].key == "bl_ninehund_titan") and 1e6 or false
+    end,
+})
+SMODS.Sound({
 	key = 'music_algebra',
 	path = 'mus_algebra.ogg',
     pitch = 1,
@@ -1076,6 +1159,15 @@ SMODS.Sound({
     sync = false,
     select_music_track = function()
         return (G.GAME and G.GAME.blind and G.GAME.blind.config.blind.key == "bl_ninehund_starlight") and 1e6 or false
+    end,
+})
+SMODS.Sound({
+	key = 'music_hardlyknower',
+	path = 'colon3.ogg',
+    pitch = 1,
+    sync = false,
+    select_music_track = function()
+        return ninehund.CREDITS and 1e6 or false
     end,
 })
 

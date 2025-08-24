@@ -1447,6 +1447,9 @@ SMODS.Blind	{
     end
 }
 
+--unfinished but had an ambitious mechanic that i lost interest in making, maybe some other day?
+--you can look at the files to see the assets i made for this
+--[[
 SMODS.Blind	{
     key = 'starlight',
     loc_txt = {
@@ -1478,7 +1481,18 @@ SMODS.Blind	{
         self.fail_safe = false
         G.GAME.abbie_speed = 1
     end,
+    per_tick = function(self, t)
+        if self.fail_safe then
+            self.fail_safe = false
+            G.GAME.nine_disableplay = false
+            self.drawn_to_hand(self)
+        end
+    end,
+    press_play = function(self)
+        G.GAME.n_blindPlaying = true
+    end,
     defeat = function(self)
 
     end,
 }
+]]

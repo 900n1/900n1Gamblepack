@@ -1437,7 +1437,7 @@ SMODS.Joker{
         name = 'The Pendant',
     },
     atlas = 'necklace', 
-    rarity = 'ninehund_super',
+    rarity = 3,
     cost = 99,
     unlocked = true,
     discovered = true, 
@@ -1633,7 +1633,6 @@ SMODS.Joker{
         end
         if context.end_of_round and not context.blueprint and not context.individual and not context.repetition and not context.retrigger_joker then
             card.ability.extra.mult = card.ability.extra.mult * card.ability.extra.selfmult
-            card:speak(card.ability.extra.mult)
         end
     end,
 }
@@ -1676,7 +1675,7 @@ SMODS.Joker{
         local find = SMODS.find_card('j_ninehund_onepiece');
         if #find > 0 then
             SMODS.calculate_effect({ message = "There can only be ONE piece.", colour = G.C.MULT, instant = false}, find[1])
-            find[1].ability.extra.gain = find[1].ability.extra.gain * 0.95;
+            find[1].ability.extra.gain = 1 + ((find[1].ability.extra.gain-1) * 0.5);
             card:start_dissolve(nil, true);
             return
         end
@@ -1981,10 +1980,10 @@ SMODS.Joker{
         name = "Euler's Identity",
         text = {
           'At the end of the round:',
-          'Adds {C:void,s:1.2}#3#{} to {C:attention}random stat',
-          'to the {C:attention}Joker on the left',
-          'by deducting {C:void,s:1.2}#3#{} from a {C:attention}random stat{}',
-          'to the {C:attention}Joker on the right.',
+          'Adds {C:void,s:1.2}#3#{} to {C:attention}all numbered',
+          '{C:attention}stats{} to the {C:attention}Joker on the left',
+          'by deducting {C:void,s:1.2}#3#{} from {C:attention}all numbered{}',
+          '{C:attention}stats{} to the {C:attention}Joker on the right.',
           '{B:1,C:white,s:0.8}#1#{} {B:2,C:white,s:0.8}#2#{}',
         },
     },
@@ -2147,14 +2146,22 @@ SMODS.Joker{
                 if type(left_joker.ability.extra) == "number" then
                     left_joker.ability.extra = left_joker.ability.extra + card.ability.extra.calculation
                 else
-                    local chosenOne = pseudorandom_element(toChange_left,pseudoseed('nothingwrong'))
-                    left_joker.ability.extra[chosenOne] = left_joker.ability.extra[chosenOne] + card.ability.extra.calculation
+                    for k, m in pairs(left_joker.ability.extra) do
+                        if type(m) == "number" then
+                            compat = true
+                            left_joker.ability.extra[k] = m + card.ability.extra.calculation
+                        end
+                    end
                 end
                 if type(right_joker.ability.extra) == "number" then
-                    right_joker.ability.extra = right_joker.ability.extra + card.ability.extra.calculation
+                    right_joker.ability.extra = right_joker.ability.extra - card.ability.extra.calculation
                 else
-                    local chosenOne = pseudorandom_element(toChange_right,pseudoseed('nothingwrong'))
-                    right_joker.ability.extra[chosenOne] = right_joker.ability.extra[chosenOne] - card.ability.extra.calculation
+                    for k, m in pairs(right_joker.ability.extra) do
+                        if type(m) == "number" then
+                            compat = true
+                            right_joker.ability.extra[k] = m - card.ability.extra.calculation
+                        end
+                    end
                 end
 
                 G.E_MANAGER:add_event(Event({

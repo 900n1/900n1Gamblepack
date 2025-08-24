@@ -486,6 +486,83 @@ return {
                 }
             },
         },
+        Sleeve = {
+            sleeve_ninehund_emptysleeve = {
+                name = "Empty Sleeve",
+                text = { 
+                    "{C:inactive}Each playing card",
+                    "{C:inactive}becomes Blank"
+                }
+            },
+            sleeve_ninehund_emptysleeve_alt = {
+                name = "Empty Sleeve",
+                text = { 
+                    "{C:inactive}Start with",
+                    "{C:inactive,E:1,s:1.4}Mystic Flour Cookie"
+                }
+            },
+            sleeve_ninehund_tycoonsleeve = {
+                name = "Tycoon Sleeve",
+                text = { 
+                    "Start with {C:attention}Basic Iron Dropper{},",
+                    "{C:attention}Ore Purifier{}, and {C:attention}Basic Furnace{}",
+                    "{C:red}No discards"
+                }
+            },
+            sleeve_ninehund_tycoonsleeve_alt = {
+                name = "Tycoon Sleeve",
+                text = { 
+                    "Start with an extra",
+                    "{C:attention}Basic Iron Dropper{} and",
+                    "{C:attention}Basic Furnace"
+                }
+            },
+            sleeve_ninehund_blandsleeve = {
+                name = "Bland Sleeve",
+                text = { 
+                    "Each playing card",
+                    "gets {C:void}no suit"
+                }
+            },
+            sleeve_ninehund_blandsleeve_alt = {
+                name = "Blander Sleeve",
+                text = { 
+                    "{C:void}Does nothing"
+                }
+            },
+            sleeve_ninehund_deltarunesleeve = {
+                name = "Sanctuary Sleeve",
+                text = {
+                    "Start with a",
+                    "{C:void,E:1}Dark Fountain",
+                    "Playing cards have",
+                    "a {C:void,E:1}random edition"
+                },
+            },
+            sleeve_ninehund_deltarunesleeve_alt = {
+                name = "Second Sanctuary Sleeve",
+                text = { 
+                    "Playing cards gain",
+                    "a {C:rainbow,E:1}random enchancement"
+                }
+            },
+            sleeve_ninehund_onecardsleeve = {
+                name = "The One Card Sleeve",
+                text = {
+                    "Deck is reduced to",
+                    "{C:blue,s:1.2}One Card",
+                    "Start with the {C:attention,s:1.2}The One Card{},",
+                    "{C:attention}Oops! All 6's{}, and {C:money}+$#1#",
+                },
+            },
+            sleeve_ninehund_onecardsleeve_alt = {
+                name = "The One Card Is Real!!",
+                text = { 
+                    "{C:attention,s:1.2}The One Card",
+                    "is further buffed"
+                }
+            },
+        },
         Other = {
             ninehund_secsanccredit = {
                 name = "Background Song",
@@ -493,6 +570,13 @@ return {
                     "The Second Sanctuary - Deltarune",
                     "{C:inactive,s:0.8}Song by Toby Fox",
                     "{C:inactive,s:0.8}Cover by Siivagunner Submission"
+                }
+            },
+            ninehund_secsanccredit_alt = {
+                name = "Background Song",
+                text = {
+                    "Crumbling Tower - Deltarune",
+                    "{C:inactive,s:0.8}Song by Toby Fox",
                 }
             },
             ninehund_health = {

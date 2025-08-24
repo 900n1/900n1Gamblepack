@@ -15,7 +15,7 @@ pattern = '''
 position = 'before'
 match_indent = true
 payload = '''
-    if #ninehund.imagetable.images > 0 then
+    if #ninehund.imagetable.images > 0 and not ninehund.CREDITS then
         if G.STAGE == G.STAGES.MAIN_MENU then --terminate at main menu
             ninehund.imagetable.images = {}
         end
@@ -31,13 +31,49 @@ payload = '''
             else
                 love.graphics.draw(v.image, v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
             end
-            if v.func ~= nil and (not self.OVERLAY_MENU or (G.GAME.blind and G.GAME.blind.config.blind.no_pause))then
+            if v.func ~= nil and (not self.OVERLAY_MENU or (G.GAME.blind and G.GAME.blind.config.blind.no_pause)) then
                 v.func(v)
             end
         end
         love.graphics.pop()
     end
 '''
+
+# im so lazy
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''
+    timer_checkpoint('rest', 'draw')
+'''
+position = 'before'
+match_indent = true
+payload = '''
+    if #ninehund.imagetable.images > 0 and ninehund.CREDITS then
+        if not self.OVERLAY_MENU then
+            ninehund.CREDITS = nil
+            ninehund.imagetable.images = {}
+        end
+        love.graphics.push()
+        for _, v in pairs(ninehund.imagetable.images) do
+            if v.color then
+                love.graphics.setColor(v.color[1], v.color[2], v.color[3], v.alpha)
+            else
+                love.graphics.setColor(1, 1, 1, v.alpha)
+            end
+            if v.sprite then
+                love.graphics.draw(v.image,ninehund.imagetable.frames[v.name][v.frame], v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
+            else
+                love.graphics.draw(v.image, v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
+            end
+            if v.func ~= nil then
+                v.func(v)
+            end
+        end
+        love.graphics.pop()
+    end
+'''
+
 
 # Patches lifted straight from Cryptid (The Tax effect), and from https://github.com/Mysthaps/LobotomyCorp
 [[patches]]
@@ -280,3 +316,17 @@ payload = '''
         end
     end
 '''
+
+# was only able to figure this out due to looking at Aikoyori's mod code
+# even still i had to find out how the hell card_protos and starting_params works, funneled like 2 hours into
+# deciphering the base game's code
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "        for k, v in ipairs(card_protos) do"
+position = "before"
+payload = """
+card_protos = ninehund_customDeck(self,card_protos)
+
+"""
+match_indent = true

@@ -481,7 +481,7 @@ SMODS.Consumable{
         badges[#badges+1] = create_badge('Deltarune', G.C.VOID, G.C.WHITE, 0.8)
     end,
     loc_vars = function(self,info_queue,center)
-        info_queue[#info_queue+1] = { key = "ninehund_secsanccredit", set = "Other" }
+        info_queue[#info_queue+1] = { key = G.GAME.n_darkworld and "ninehund_secsanccredit_alt" or "ninehund_secsanccredit", set = "Other" }
         return 
     end,
     can_use = function(self,card)
@@ -641,7 +641,7 @@ SMODS.Consumable{
         },
     },
     atlas = 'itemCards', 
-    cost = 15,
+    cost = 10,
     unlocked = true,
     discovered = true, 
     pos = {x = 1, y = 0},
