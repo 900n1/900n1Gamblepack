@@ -369,8 +369,8 @@ SMODS.Blind	{
             if score >= G.GAME.blind.chips and G.GAME.n_blindHits > 1 then
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 G.E_MANAGER:add_event(Event({
                     trigger = "before",
@@ -492,8 +492,8 @@ SMODS.Blind	{
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.n_blindReset = true
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 play_area_status_text(G.GAME.n_blindHits.." out of 3 left.", false, 2);
                 refresh_deck();
@@ -618,8 +618,8 @@ SMODS.Blind	{
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.n_blindReset = true
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 play_area_status_text(G.GAME.n_blindHits.." out of 3 left.", false, 2);
                 refresh_deck();
@@ -730,8 +730,8 @@ SMODS.Blind	{
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.n_blindReset = true
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 play_area_status_text(G.GAME.n_blindHits.." out of 4 left.", false, 2);
                 refresh_deck();
@@ -945,8 +945,8 @@ SMODS.Blind	{
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.n_blindReset = true
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 play_area_status_text(G.GAME.n_blindHits.." out of 3 left.", false, 2);
                 refresh_deck();
@@ -1034,8 +1034,8 @@ SMODS.Blind	{
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.n_blindReset = true
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 play_area_status_text(G.GAME.n_blindHits.."..", false, 2);
                 refresh_deck();
@@ -1277,8 +1277,8 @@ SMODS.Blind	{
                 G.GAME.n_blindHits = G.GAME.n_blindHits - 1
                 G.GAME.n_blindReset = true
                 G.GAME.blind:juice_up(2,2)
-                ease_hands_played(math.max(0, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left - G.GAME.n_blindPunish,true);
-                ease_discard(math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
+                ease_hands_played(math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands) - G.GAME.current_round.hands_left - G.GAME.n_blindPunish,true);
+                ease_discard(math.max(1, G.GAME.round_resets.discards + G.GAME.round_bonus.discards) - G.GAME.current_round.discards_left,true);
                 ease_chips(0);
                 play_area_status_text(G.GAME.n_blindHits.." hits left.", false, 2);
                 refresh_deck();

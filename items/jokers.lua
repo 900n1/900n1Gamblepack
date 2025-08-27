@@ -1438,7 +1438,7 @@ SMODS.Joker{
     },
     atlas = 'necklace', 
     rarity = 3,
-    cost = 99,
+    cost = 61,
     unlocked = true,
     discovered = true, 
     blueprint_compat = true, 
