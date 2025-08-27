@@ -2037,7 +2037,7 @@ SMODS.Joker{
                 center.ability.extra.leftJoker = {"missing",G.C.GREY}
             end
             if right_joker and right_joker ~= center then
-                local compat = 0
+                local compat = false
                 if right_joker.ability.extra ~= nil and type(right_joker.ability.extra) ~= "nil" then
                     if type(right_joker.ability.extra) == "number" then
                         compat = true
