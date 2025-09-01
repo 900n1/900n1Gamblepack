@@ -777,7 +777,7 @@ SMODS.Blind	{
         end
         G.E_MANAGER:add_event(Event({
             func = function()
-                G.SETTINGS.GAMESPEED = self.gamespeed
+                G.SETTINGS.GAMESPEED = G.GAME.n_solitudeSpeed
                 return true
             end
         })) 
