@@ -27,7 +27,7 @@ payload = '''
                 love.graphics.setColor(1, 1, 1, v.alpha)
             end
             if v.sprite then
-                love.graphics.draw(v.image,ninehund.imagetable.frames[v.name][v.frame], v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
+                love.graphics.draw(v.image,ninehund.imagetable.frames[v.name][v.frame], v.x, v.y, v.r, v.sx*ninehund.constants.xscale, v.sy*ninehund.constants.yscale, v.ox, v.oy)
             else
                 love.graphics.draw(v.image, v.x, v.y, v.r, v.sx, v.sy, v.ox, v.oy)
             end
@@ -215,30 +215,14 @@ _spasm = true
 [patches.pattern]
 target = 'functions/misc_functions.lua'
 pattern = '''
-          final_line[#final_line].nodes[1] = {n=G.UIT.O, config={
-            object = DynaText({string = {assembled_string}, colours = {part.control.V and args.vars.colours[tonumber(part.control.V)] or loc_colour(part.control.C or nil)},
-            float = _float,
-            silent = _silent,
-            pop_in = _pop_in,
-            bump = _bump,
-            spacing = _spacing,
-            scale = 0.32*(part.control.s and tonumber(part.control.s) or args.scale  or 1)*desc_scale})
+         scale = 0.32*(part.control.s and tonumber(part.control.s) or args.scale  or 1)*desc_scale})
           }}
+        elseif part.control.X or part.control.B then
 '''
-position = 'at'
+position = 'before'
 match_indent = true
 payload = '''
-final_line[#final_line].nodes[1] = {n=G.UIT.O, config={
-  object = DynaText({string = {assembled_string}, colours = {part.control.V and args.vars.colours[tonumber(part.control.V)] or loc_colour(part.control.C or nil)},
-  float = _float,
-  silent = _silent,
-  pop_in = _pop_in,
-  bump = _bump,
-  spacing = _spacing,
-  scale = 0.32*(part.control.s and tonumber(part.control.s) or args.scale  or 1)*desc_scale,
-  spasm = _spasm
-  })
-}}
+spasm = _spasm,
 '''
 
 [[patches]]
@@ -297,10 +281,10 @@ payload = '''
                 ninehund.constants.WS.y
             })
             love.graphics.setShader(G.SHADERS['n_bloom'])
-            love.graphics.draw(ninehund.constants.FT, ninehund.constants.CS.x, ninehund.constants.CS.y, 0, 2.5, 2.5, 320, 180)
+            love.graphics.draw(ninehund.constants.FT, ninehund.constants.CS.x, ninehund.constants.CS.y, 0, ninehund.constants.xscale*2.5, ninehund.constants.yscale*2.5, 320, 180)
             love.graphics.setShader()
             love.graphics.setBlendMode("multiply","premultiplied")
-            love.graphics.rectangle("fill", -100,-100, 2000,2000)
+            love.graphics.rectangle("fill", -100,-100, ninehund.constants.xscale*2000,ninehund.constants.yscale*2000)
             love.graphics.setBlendMode("alpha")
             love.graphics.pop()
         end
@@ -308,7 +292,7 @@ payload = '''
             love.graphics.push()
             ninehund.VH.dft = lerp(ninehund.VH.dft,0,ninehund.dt*0.3)
             love.graphics.setColor({ninehund.VH.dft_bg,ninehund.VH.dft_bg,ninehund.VH.dft_bg,ninehund.VH.dft})
-            love.graphics.rectangle("fill", -100,-100, 2000,2000)
+            love.graphics.rectangle("fill", -100, -100, ninehund.constants.xscale*2000,ninehund.constants.yscale*2000)
             love.graphics.pop()
             if ninehund.VH.dft <= 0.05 then
                 G.GAME.n_darkworldCUTSCENE = false

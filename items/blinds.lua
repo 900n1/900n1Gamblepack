@@ -110,7 +110,7 @@ local asriel_attacks = {
                         n_makeImage(
                             "att_light","att_light",
                             _poslol, ninehund.constants.CS.y-203, 0,
-                            n_randNeg(5), 5,
+                            n_randNeg(4), 4,
                             function(self)
                                 self.timer = self.timer + ninehund.dt
                                 self.frame = n_nextFrame(self.totalframes,16,self.timer)
@@ -143,7 +143,7 @@ local asriel_attacks = {
                         n_makeImage(
                             "att_light","att_light",
                             _poslol, ninehund.constants.CS.y-203, 0,
-                            n_randNeg(5), 5,
+                            n_randNeg(4), 4,
                             function(self)
                                 self.timer = self.timer + ninehund.dt
                                 self.frame = n_nextFrame(self.totalframes,16,self.timer)
@@ -171,7 +171,7 @@ local asriel_attacks = {
                 n_makeImage(
                     "att_sword","asrielslash",
                     ninehund.constants.CS.x-61, ninehund.constants.CS.y, 0,
-                    -6, 6,
+                    -4, 4,
                     function(self)
                         self.timer = self.timer + ninehund.dt
                         self.frame = n_nextFrame(self.totalframes,16,self.timer)
@@ -203,7 +203,7 @@ local asriel_attacks = {
                 n_makeImage(
                     "att_sword","asrielslash",
                     ninehund.constants.CS.x+184, ninehund.constants.CS.y, 0,
-                    6, 6,
+                    4, 4,
                     function(self)
                         self.timer = self.timer + ninehund.dt
                         self.frame = n_nextFrame(self.totalframes,16,self.timer)
@@ -239,7 +239,7 @@ local asriel_attacks = {
                     n_makeImage(
                         "att_star","starboom",
                         (292*0.5)+(_ouch.children.center.CT.x*_ouch.children.center.scale.x), ninehund.constants.CS.y, 0,
-                        1.2, 1.2,
+                        1, 1,
                         function(self)
                             self.timer = self.timer + ninehund.dt
                             self.frame = n_nextFrame(self.totalframes,16,self.timer)
@@ -460,7 +460,7 @@ SMODS.Blind	{
         n_makeImage(
             "blindeffect","feareffect",
             ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-            6, 6,
+            4, 4,
             function(self)
                 if G.GAME.n_blindEnd then
                     self.alpha = lerp(self.alpha,0,2*ninehund.dt)
@@ -587,7 +587,7 @@ SMODS.Blind	{
         n_makeImage(
             "blindeffect","greedeffect",
             ninehund.constants.CS.x, 9999, 0,
-            3, 3,
+            2, 2,
             function(self)
                 if G.GAME.n_blindTarget ~= nil then
                     self.x = (self.SSTable.px*2)+(G.GAME.n_blindTarget.children.center.CT.x*G.GAME.n_blindTarget.children.center.scale.x)
@@ -804,7 +804,7 @@ SMODS.Blind	{
                     n_makeImage(
                         "blindeffect","solitudeeffect",
                         (ninehund.constants.CS.x+(n_randrange(0.45)*ninehund.constants.WS.x)), (ninehund.constants.CS.y-(math.random()*0.35*ninehund.constants.WS.y)), 0,
-                        1, 1,
+                        0.8, 0.8,
                         function(self)
                             if G.GAME.blind.config.blind.key ~= "bl_ninehund_solitude" then n_removeImage("blindeffect",nil,self.id) end
                             self.timer = self.timer + ninehund.dt
@@ -907,7 +907,7 @@ SMODS.Blind	{
         n_makeImage(
             "blindeffect","hatredeffect",
             ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-            1.5, 1.5,
+            1, 1,
             function(self)
                 if G.GAME.n_blindEnd then
                     self.alpha = lerp(self.alpha,0,2*ninehund.dt)
@@ -1254,7 +1254,7 @@ SMODS.Blind	{
     vals = nil,
     str = nil,
     set_blind = function(self)
-        G.GAME.nine_disableplay = true
+        G.GAME.blind.block_play = true
         G.GAME.n_blindHits = self.remaining_hits
         G.GAME.n_blindReset = false
         G.GAME.n_blindEnd = false
@@ -1264,7 +1264,7 @@ SMODS.Blind	{
         self.fail_safe = false
     end,
     defeat = function(self)
-        G.GAME.nine_disableplay = false
+        G.GAME.blind.block_play = false
         G.GAME.nine_musicspeed = 1;
         local _card = create_card('Joker',G.jokers,nil,nil,nil,nil,'j_ninehund_algebrajoker');
         _card:add_to_deck()
@@ -1307,7 +1307,7 @@ SMODS.Blind	{
             G.GAME.n_blindReset = false;
             ease_chips(0);
         end
-        G.GAME.nine_disableplay = true
+        G.GAME.blind.block_play = true
         G.GAME.n_algebraInput = 0
         self.equation = pseudorandom_element(mathQuestions[(G.GAME.n_blindHits > 0 and 10-G.GAME.n_blindHits<=#mathQuestions) and 10-G.GAME.n_blindHits or #mathQuestions], pseudoseed('math')) --pseudorandom_element(mathQuestions[G.GAME.n_blindHits > 0 and 17-G.GAME.n_blindHits or 16], pseudoseed('math'))
         self.vals = self.equation.vals()
@@ -1331,7 +1331,7 @@ SMODS.Blind	{
                     if self.timer > 10 then
                         G.GAME.n_blindPlaying = true
                         if G.GAME.blind.config.blind.ans == G.GAME.n_algebraInput or (G.GAME.blind.config.blind.equation.allow_neg and G.GAME.blind.config.blind.ans == -G.GAME.n_algebraInput) then
-                            G.GAME.nine_disableplay = false
+                            G.GAME.blind.block_play = false
                         else
                             G.GAME.n_blindPunish = G.GAME.n_blindPunish + 1
                             G.GAME.blind.config.blind.drawn_to_hand(G.GAME.blind.config.blind)
@@ -1373,13 +1373,13 @@ SMODS.Blind	{
             n_makeImage(
                 "Abuttons","numberButtons",
                 imgonnablow, ninehund.constants.WS.y+200, 0,
-                1, 1,
+                0.8, 0.8,
                 function(self)
                     if not G.GAME.n_blindPlaying then
                         self.y = lerp(self.y,self.buttpos,5*ninehund.dt)
                         self.r = lerp(self.r,0,5*ninehund.dt)
-                        self.sx = lerp(self.sx,1,5*ninehund.dt)
-                        self.sy = lerp(self.sy,1,5*ninehund.dt)
+                        self.sx = lerp(self.sx,0.8,5*ninehund.dt)
+                        self.sy = lerp(self.sy,0.8,5*ninehund.dt)
                     else
                         self.acc = self.acc + ninehund.dt
                         self.x = self.x + self.rand2
@@ -1404,7 +1404,7 @@ SMODS.Blind	{
     per_tick = function(self, t)
         if self.fail_safe then
             self.fail_safe = false
-            G.GAME.nine_disableplay = false
+            G.GAME.blind.block_play = false
             self.drawn_to_hand(self)
         end
     end,
@@ -1422,7 +1422,7 @@ SMODS.Blind	{
                     elseif v.id == 10 then
                         G.GAME.n_blindPlaying = true
                         if self.ans == G.GAME.n_algebraInput or (self.equation.allow_neg and self.ans == -G.GAME.n_algebraInput) then
-                            G.GAME.nine_disableplay = false
+                            G.GAME.blind.block_play = false
                         else
                             G.GAME.n_blindPunish = G.GAME.n_blindPunish + 1
                             self.drawn_to_hand(self)
@@ -1438,8 +1438,8 @@ SMODS.Blind	{
                         G.GAME.n_algebraInput = (string.len(str) > 0 and tonumber(str:sub(1,-2))) or 0
                     end
                     v.r = math.rad(n_randrange(20))
-                    v.sx = 1 + n_randrange(0.2)
-                    v.sy = 1 + n_randrange(0.2)
+                    v.sx = 0.8 + n_randrange(0.2)
+                    v.sy = 0.8 + n_randrange(0.2)
                     play_sound('button', math.random(9,11)*0.1,1);
                 end
             end
@@ -1477,14 +1477,14 @@ SMODS.Blind	{
     },
     mult = 1,
     set_blind = function(self)
-        G.GAME.nine_disableplay = true
+        G.GAME.blind.block_play = true
         self.fail_safe = false
         G.GAME.abbie_speed = 1
     end,
     per_tick = function(self, t)
         if self.fail_safe then
             self.fail_safe = false
-            G.GAME.nine_disableplay = false
+            G.GAME.blind.block_play = false
             self.drawn_to_hand(self)
         end
     end,

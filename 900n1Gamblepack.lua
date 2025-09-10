@@ -366,6 +366,14 @@ function Game.update(self, dt)
     self.C.VOID[2] = 0.2*(1+math.sin(self.TIMERS.REAL*1.5 + 2))
     self.C.VOID[3] = 0.2*(1+math.sin(self.TIMERS.REAL*1.5 + 4))
 
+    --for screen resolution changes?
+    ninehund.constants.WS.x = love.graphics.getWidth()
+    ninehund.constants.WS.y = love.graphics.getHeight()
+    ninehund.constants.CS.x = ninehund.constants.WS.x/2
+    ninehund.constants.CS.y = ninehund.constants.WS.y/2
+    ninehund.constants.xscale = ninehund.constants.WS.x/1280
+    ninehund.constants.yscale = ninehund.constants.WS.y/720
+
     game_updateref(self, dt)
 end
 

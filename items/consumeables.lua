@@ -349,7 +349,7 @@ SMODS.Consumable{
         n_makeImage(
             "souls","balatroblindsouls",
             ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-            3, 3,
+            2, 2,
             function(self)
                 ninehund.VH.c = ninehund.VH.c + ninehund.dt
                 if ninehund.VH.d == 0 then
@@ -396,7 +396,7 @@ SMODS.Consumable{
             n_makeImage(
                 "souls","balatroblindsouls",
                 ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-                3, 3,
+                2, 2,
                 function(self)
                     self.x = (ninehund.constants.CS.x) + (math.sin((ninehund.VH.c * ninehund.VH.b) + ((self.id / 6) * 2 * math.pi))*ninehund.VH.a)
                     self.y = (ninehund.constants.CS.y) + (math.cos((ninehund.VH.c * ninehund.VH.b) + ((self.id / 6) * 2 * math.pi))*-ninehund.VH.a)
@@ -496,7 +496,7 @@ SMODS.Consumable{
         n_makeImage(
             "knife","krisknife",
             ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-            2, 2,
+            1.5, 1.5,
             function(self)
                 self.counter = self.counter + ninehund.dt
                 if self.counter < 1.5 then
@@ -661,7 +661,7 @@ SMODS.Consumable{
         n_makeImage(
             "knife","pristineblade",
             ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-            2, 2,
+            1.5, 1.5,
             function(self)
                 self.counter = self.counter + ninehund.dt
                 if self.counter < 1 then
@@ -691,7 +691,7 @@ SMODS.Consumable{
                     selectedcard:start_dissolve(nil,true)
                     for _, v in pairs(G.playing_cards) do
                         if v.base.id == selectedrank then
-                            v:start_dissolve(nil,true)
+                            v:damage_card(9999999)
                         end
                     end
                     return true
@@ -708,7 +708,7 @@ SMODS.Consumable{
             n_makeImage(
                 "narratorSTP",easteregg,
                 ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-                2, 2,
+                1.5, 1.5,
                 function(self)
                     self.timer = self.timer + ninehund.dt
                     if self.timer < 5 then
@@ -732,7 +732,7 @@ SMODS.Consumable{
             n_makeImage(
                 "narratorSTP","narrator"..math.random(1,3),
                 ninehund.constants.CS.x, ninehund.constants.CS.y, 0,
-                2, 2,
+                1.5, 1.5,
                 function(self)
                     self.timer = self.timer + ninehund.dt
                     if self.timer < 3 then

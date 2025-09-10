@@ -10,11 +10,11 @@ if not ninehund["nine_imagetable"] then
 end
 
 --you gotta love the constant measurement lookup table for these things
-local xscale = love.graphics.getWidth()/1920
-local yscale = love.graphics.getHeight()/1080
 ninehund.constants = {
     CS = {x = love.graphics.getWidth()/2, y = love.graphics.getHeight()/2},
-    WS = {x = love.graphics.getWidth(), y = love.graphics.getHeight()}
+    WS = {x = love.graphics.getWidth(), y = love.graphics.getHeight()},
+    xscale = love.graphics.getWidth()/1920,
+    yscale = love.graphics.getHeight()/1080
 }
 
 --function from yahimod
@@ -46,7 +46,7 @@ function n_makeImage(key,name,_x,_y,_r,_sx,_sy,_func,_sprite,_frame,_SStable,ext
         name = name,
         image = ninehund.imagetable.loaded[name],
         x = _x, y = _y, r = _r,
-        sx = xscale*_sx, sy = yscale*_sy,
+        sx = _sx, sy = _sy,
         ox = _sprite and _SStable.px/2 or ninehund.imagetable.loaded[name]:getWidth()/2,
         oy = _sprite and _SStable.py/2 or ninehund.imagetable.loaded[name]:getHeight()/2,
         alpha = 1,
